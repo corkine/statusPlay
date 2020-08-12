@@ -1,0 +1,11 @@
+GET     /                           controllers.Default.redirect(to="/all")
+# [Public]
+GET     /all                        controllers.ActivityController.all
+# [Admin]
+GET     /schema                     controllers.ActivityController.schema
+# [User]
+GET     /:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long)
+
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+      
