@@ -1,11 +1,21 @@
-GET     /                           controllers.Default.redirect(to="/all")
 # [Public]
-GET     /all                        controllers.ActivityController.all
+GET     /status                            controllers.Default.redirect(to="/status/all")
+GET     /status/                           controllers.Default.redirect(to="/status/all")
+GET     /status/all                        controllers.ActivityController.all
 # [Admin]
-GET     /schema                     controllers.ActivityController.schema
+GET     /status/schema                     controllers.ActivityController.schema
 # [User]
-GET     /:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long)
+GET     /status/:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long)
 
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+
+# [Public]
+GET     /fitness/all                    controllers.FitnessController.all
+# [Admin]
+GET     /fitness/schema                 controllers.FitnessController.schema
+# [User]
+GET     /fitness/details/:recordId      controllers.FitnessController.recordDetails(recordId:Long)
+
+GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)
 
       
