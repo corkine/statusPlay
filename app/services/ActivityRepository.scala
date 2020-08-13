@@ -112,6 +112,31 @@ class ActivityRepository @Inject() (protected val dbConfigProvider: DatabaseConf
 
   def allWebsites: Future[Seq[Website]] = db.run(websites.result)
 
+  def addWebsite(name:String,url:String,note:Option[String],priority:Int): Future[Int] = db.run {
+    websites.map(ex => (ex.name, ex.url, ex.note, ex.priority))
+      .forceInsertQuery(Query((name,url,note,priority)).filterNot(_ =>
+        websites.filter(_.url === url).exists
+      ))
+  }
+
+  def deleteWebsite(id:Long): Future[Int] = db.run {
+    websites.filter(_.id === id).delete
+  }
+
+  def updateWebsite(id:Long,name:Option[String],url:Option[String],note:Option[String],priority:Option[Int]): Future[Int] = db.run {
+    websites.filter(_.id === id).result.headOption flatMap({
+      case None => DBIO.successful(0)
+      case Some(oldWebsite) =>
+        val oName = name.getOrElse(oldWebsite.name)
+        val oUrl = url.getOrElse(oldWebsite.url)
+        val oNote = if (note.isEmpty) oldWebsite.note else note
+        val oPriority = priority.getOrElse(oldWebsite.priority)
+        websites.filter(_.id === id)
+          .map(o => (o.name,o.url,o.note,o.priority))
+          .update((oName,oUrl,oNote,oPriority))
+    }:Option[Website] => DBIOAction[Int,NoStream,Effect.All])
+  }
+
   def logBatchActivity(data: Seq[(Website, Status, Option[String])]): Future[Seq[Long]] = db.run {
     activitiesInsert ++= data.map(d => Activity(d._1.id,LocalDateTime.now(),d._2,d._3))
   }
@@ -160,13 +185,15 @@ class ActivityRepository @Inject() (protected val dbConfigProvider: DatabaseConf
   /**
    * 获取所有网站包含的指定时间内的网站信息、平均状态、记录数目
    */
-  def websitesInfo(from:LocalDateTime, to:LocalDateTime): Future[Seq[(Option[String], Option[String], Long, Option[Int], Int)]] = db.run {
+  def websitesInfo(from:LocalDateTime, to:LocalDateTime):
+    Future[Seq[(Option[String], Option[String], Option[String], Long, Option[Int], Int)]] = db.run {
     (websites joinLeft
       activities.filter(a => a.checkTime >= from && a.checkTime <= to)
       on (_.id === _.website_id))
       .groupBy { case (w,_) => w.id }
       .map { case (wId,g) => (g.map(_._1.name).min,
                               g.map(_._1.url).min,
+                              g.map(_._1.note).min,
                               wId,
                               g.map(_._2.map(_.status)).avg,
                               g.length)}

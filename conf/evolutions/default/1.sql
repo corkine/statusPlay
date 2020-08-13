@@ -4,19 +4,7 @@ create table "websites" ("name" VARCHAR NOT NULL,"url" VARCHAR NOT NULL,"note" V
 
 create table "activities" ("website_id" BIGINT NOT NULL,"checkTime" TIMESTAMP NOT NULL,"status" INTEGER NOT NULL,"note" VARCHAR,"id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT);
 
-alter table "activities" add constraint "website" foreign key("website_id") references "websites"("id") on update NO ACTION on delete NO ACTION;
-
-create table IF NOT EXISTS `Users` (
-       `username` VARCHAR NOT NULL,
-       `password` VARCHAR NOT NULL,
-       `userType` VARCHAR NOT NULL,
-       `id` BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT);
-
-insert into "Users" ("username", "password", "userType")
-values ('corkine', 'mi960032', 'Admin');
-
-insert into "Users" ("username", "password", "userType")
-values ('marvin', 'marvin123', 'Common');
+alter table "activities" add constraint "website" foreign key("website_id") references "websites"("id") on update RESTRICT on delete CASCADE;
 
 insert into "websites" ("name", "url", "note", "priority")
 values ( '主页', 'http://www.mazhangjing.com', null, 1 );
@@ -32,7 +20,13 @@ values ( '图床服务', 'http://static2.mazhangjing.com', null, 1 );
 
 insert into "websites" ("name", "url", "note", "priority")
 values ( '短链接服务', 'http://go.mazhangjing.com', null, 1 );
+
+insert into "websites" ("name", "url", "note", "priority")
+values ( '成才教育', 'http://edu.mazhangjing.com', null, 1 );
+
+insert into "websites" ("name", "url", "note", "priority")
+values ( 'Corkine & We', 'http://love.mazhangjing.com', null, 1 );
+
 # --- !Downs
 drop table if exists "websites";
 drop table if exists "activities";
-drop table if exists Users;
