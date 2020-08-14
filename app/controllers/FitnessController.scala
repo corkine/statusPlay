@@ -8,11 +8,33 @@ import play.api.mvc._
 import services.{AuthController, AuthService, FitnessRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Source
 
 @Singleton
 class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepository, val auth: AuthService)
                                  (implicit val ec: ExecutionContext)
   extends AbstractController(cc) with AuthController {
+
+  def insert: Action[AnyContent] = Action.async { implicit req =>
+    req.body.asMultipartFormData.flatMap { data =>
+        data.file("data").map { file =>
+          val json = file.ref.toFile
+          val io = Source.fromFile(json)
+          val jsonValue = Json.parse(io.getLines().mkString(","))
+          io.close()
+          jsonValue
+        }
+    } match {
+      case None => Future(message("Can't load data from request"))
+      case Some(jsValue) => fr.insertBatch(jsValue) map { res =>
+        message(s"Insert ${res.sum} data done.")
+      } recover {
+        case e:Throwable => message(s"Insert process error. ${e.getMessage}")
+      }
+    }
+  }
+
+  ///////////////////// NOT IOS STAND ////////////////////////
 
   def all = Action.async {
     fr.all(LocalDateTime.now().minusDays(3),LocalDateTime.now()).map { req =>

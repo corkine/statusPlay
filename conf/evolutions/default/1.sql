@@ -6,6 +6,10 @@ create table "activities" ("website_id" BIGINT NOT NULL,"checkTime" TIMESTAMP NO
 
 alter table "activities" add constraint "website" foreign key("website_id") references "websites"("id") on update RESTRICT on delete CASCADE;
 
+
+create table "data" ("category" varchar not null, "value" integer not null, "unit" varchar not null, "id" bigint not null primary key auto_increment);
+
+
 insert into "websites" ("name", "url", "note", "priority")
 values ( '主页', 'http://www.mazhangjing.com', null, 1 );
 

@@ -11,9 +11,8 @@ GET     /status/:websiteId/update          controllers.ActivityController.update
 # [User]
 GET     /status/:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long)
 
-
-
 # [Public]
+POST    /fitness/iOSUpload              controllers.FitnessController.insert
 GET     /fitness/all                    controllers.FitnessController.all
 # [Admin]
 GET     /fitness/schema                 controllers.FitnessController.schema
