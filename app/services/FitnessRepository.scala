@@ -36,23 +36,6 @@ object HeartRateVariability extends Category //心率变异性
 object Weight extends Category
 object Category {
   /**
-   * 根据 Category Case Class 找到 iOS 捷径上传 JSON Key 名
-   */
-  def simpleField(in:Category): String =  in match {
-    case Steps => "step"
-    case VO2Max => "vo2"
-    case WalkingRunningDistance => "distance"
-    case FlightsClimbed => "floor"
-    case ActiveCalories => "activeactivity"
-    case RestingCalories => "restactivity"
-    case HeartRate => "heart"
-    case RestingHeartRate => "restheart"
-    case WalkingHeartRateAverage => "walkheart"
-    case HeartRateVariability => "heartvariability"
-    case Weight => "weight"
-  }
-
-  /**
    * Category 和 String 的互相转换
    */
   def cats2String(in:Category): String = in.getClass.getSimpleName.replace("$","")
@@ -82,6 +65,19 @@ object Data {
    * 根据 Controller 获得的 iOS 捷径上传的 JSON 解析为 Seq[Data]
    */
   def parseFieldJSON(in:JsValue,skipZeroValueData:Boolean = true):Seq[Data] = {
+    @inline def simpleField(in:Category): String =  in match {
+      case Steps => "step"
+      case VO2Max => "vo2"
+      case WalkingRunningDistance => "distance"
+      case FlightsClimbed => "floor"
+      case ActiveCalories => "activeactivity"
+      case RestingCalories => "restactivity"
+      case HeartRate => "heart"
+      case RestingHeartRate => "restheart"
+      case WalkingHeartRateAverage => "walkheart"
+      case HeartRateVariability => "heartvariability"
+      case Weight => "weight"
+    }
     val VALUE = "value"
     val UNIT = "unit"
     val START = "start"
