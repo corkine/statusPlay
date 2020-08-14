@@ -115,7 +115,7 @@ object Data {
 
 trait FitnessComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
-  class Records(tag: Tag) extends Table[Record](tag, "Records") {
+  class Records(tag: Tag) extends Table[Record](tag, "records") {
     def day = column[LocalDateTime]("day")
     def calorie = column[Int]("calorie")
     def note = column[Option[String]]("note")
@@ -131,7 +131,7 @@ trait FitnessComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   implicit val durationType =
     MappedColumnType.base[Duration,Long](_.getSeconds, Duration.ofSeconds)
 
-  class Datas(tag:Tag) extends Table[Data](tag, "Datas") {
+  class Datas(tag:Tag) extends Table[Data](tag, "datas") {
     def category = column[Category]("category")
     def value = column[Int]("value")
     def unit = column[String]("unit")

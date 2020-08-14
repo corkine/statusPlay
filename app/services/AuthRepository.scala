@@ -80,7 +80,7 @@ class AuthService @Inject()(protected val dbConfigProvider:DatabaseConfigProvide
     }
   )
 
-  private class Users(tag:Tag) extends Table[User](tag,"Users") {
+  private class Users(tag:Tag) extends Table[User](tag,"users") {
     def username = column[String]("username")
     def password = column[String]("password")
     def userType = column[UserType]("userType")
