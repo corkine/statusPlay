@@ -1,6 +1,6 @@
 name := "statusPlay"
  
-version := "1.0" 
+version := "2.1"
       
 lazy val `statusplay` = (project in file(".")).enablePlugins(PlayScala)
 
@@ -18,6 +18,18 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199"
 )
 
-unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )  
+unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
+
+assemblyMergeStrategy in assembly := {
+    case manifest if manifest.contains("MANIFEST.MF") =>
+      MergeStrategy.discard
+    case moduleInfo if moduleInfo.contains("module-info.class") =>
+      MergeStrategy.discard
+    case referenceOverrides if referenceOverrides.contains("reference-overrides.conf") =>
+      MergeStrategy.concat
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
+}
 
       

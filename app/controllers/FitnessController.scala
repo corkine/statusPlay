@@ -17,8 +17,11 @@ class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepositor
   def all(category:Option[String],lastDays:Option[Int],
           durationBiggerSeconds:Option[Long],
           skip:Option[Long],limit:Option[Long]): Action[AnyContent] = Action.async { implicit req =>
-    fr.all(category,lastDays,durationBiggerSeconds,skip,limit) map { res =>
-      Ok(Json.toJson(res))
+    authAdmin(req) flatMap {
+      case Right(v) => Future(v)
+      case Left(_) => fr.all(category,lastDays,durationBiggerSeconds,skip,limit) map { res =>
+        Ok(Json.toJson(res))
+      }
     }
   }
 
