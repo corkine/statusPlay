@@ -1,7 +1,5 @@
 package controllers
 
-import java.time.LocalDateTime
-
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -17,7 +15,7 @@ class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepositor
   def all(category:Option[String],lastDays:Option[Int],
           durationBiggerSeconds:Option[Long],
           skip:Option[Long],limit:Option[Long]): Action[AnyContent] = Action.async { implicit req =>
-    authAdmin(req) flatMap {
+    authUsers(req) flatMap {
       case Right(v) => Future(v)
       case Left(_) => fr.all(category,lastDays,durationBiggerSeconds,skip,limit) map { res =>
         Ok(Json.toJson(res))
@@ -27,32 +25,29 @@ class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepositor
 
   def insert: Action[AnyContent] = Action.async { implicit req =>
     req.body.asFormUrlEncoded.flatMap { data =>
-      data.get("data").map { case List(a,_*) => Json.parse(a) }
+      (for {
+        u <- data.get("user").map(_.head)
+        p <- data.get("password").map(_.head)
+        d <- data.get("data").map { case List(a,_*) => Json.parse(a) }
+      } yield (u,p,d)).map { case (u,p,d) =>
+        auth.check(u,p) map {
+          case None => Left("Auth Failed.")
+          case Some(_) => Right(d)
+        }
+      } //Option[Future[Either[String,User]]]
     } match {
-      case None => Future(message("Can't load data from request"))
-      case Some(jsValue) => fr.insertBatch2(jsValue) map { res =>
-        message(s"Insert ${res.sum} data done.")
+      case None => Future(message("Can't load data, user or password from request"))
+      case Some(f) => f.flatMap {
+        case Left(value) => Future(message(value))
+        case Right(jsValue) => fr.insertBatch2(jsValue) map { res =>
+          message(s"Insert ${res.sum} data done.")
+        }
       } recover {
         case e:Throwable => message(s"Insert process error. ${e.getMessage}")
       }
     }
   }
 
-  ///////////////////// NOT IOS STAND ////////////////////////
-
-  def allRecord = Action.async {
-    fr.allRecord(LocalDateTime.now().minusDays(3),LocalDateTime.now()).map { req =>
-      Ok(Json.toJson(req))
-    }
-  }
-
   def schema = Action(Ok(fr.schema))
-
-  def recordDetails(recordId:Long) = Action.async {
-    fr.recordDetails(recordId) map {
-      case None => message(s"Can't find this record $recordId")
-      case Some(value) => Ok(Json.toJson(value))
-    }
-  }
 
 }

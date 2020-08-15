@@ -2,6 +2,7 @@ package services
 
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, LocalDateTime}
+import java.util.Locale
 
 import com.google.inject.{Inject, Singleton}
 import org.slf4j.LoggerFactory
@@ -12,17 +13,6 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/////////////////////////////////// NOT IOS HEALTH FORMAT BEAN ///////////////////////////////////
-case class Record(day:LocalDateTime, calorie:Int, note:Option[String], id:Long)
-object Record {
-  implicit val rf: Format[Record] = (
-    (JsPath \ "day").format[LocalDateTime] and
-      (JsPath \ "calorie").format[Int] and
-      (JsPath \ "note").formatNullable[String] and
-      (JsPath \ "id").format[Long])(Record.apply, unlift(Record.unapply))
-}
-
-/////////////////////////////////// IOS HEALTH DATA FORMAT BEAN ///////////////////////////////////
 trait Category
 object Steps extends Category //步数
 object VO2Max extends Category //最大耗氧量
@@ -83,6 +73,7 @@ object Data {
    * 根据 Controller 获得的 iOS 捷径上传的 JSON 解析为 Seq[Data]
    */
   def parseFieldJSON(in:JsValue,skipZeroValueData:Boolean = true):Seq[Data] = {
+    Locale.setDefault(Locale.SIMPLIFIED_CHINESE)
     @inline def simpleField(in:Category): String =  in match {
       case Steps => "step"
       case VO2Max => "vo2"
@@ -147,16 +138,6 @@ object Data {
 
 trait FitnessComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
-  class Records(tag: Tag) extends Table[Record](tag, "records") {
-    def day = column[LocalDateTime]("day")
-    def calorie = column[Int]("calorie")
-    def note = column[Option[String]]("note")
-    def id = column[Long]("id",O.PrimaryKey,O.AutoInc)
-    override def * = (day,calorie,note,id) <> ((Record.apply _).tupled, Record.unapply)
-  }
-
-  lazy val records = TableQuery[Records]
-  lazy val recordsInsert = records returning records.map(_.id)
 
   implicit val catType =
     MappedColumnType.base[Category,String](Category.cats2String,Category.str2Cats)
@@ -179,36 +160,11 @@ trait FitnessComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   lazy val datasInsert = datas returning datas.map(_.id)
 }
 
-/////////////////////////////////// SERVICE ///////////////////////////////////
-
 @Singleton
 class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfigProvider,
                                    val ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with FitnessComponent {
   import profile.api._
-
-  ///////////////////// RECORDS //////////////////////
-
-  def allRecord(from:LocalDateTime, to:LocalDateTime): Future[Seq[Record]] = db.run {
-    records.filter(o => o.day >= from && o.day <= to).result
-  }
-
-  def batchInsertData: DBIOAction[Seq[Int], NoStream, Effect.Write] = {
-    val data:Seq[(LocalDateTime,Int,Option[String])] = null
-    val ans = data.map { case (time,cal,note) =>
-      records.map(r => (r.day,r.calorie,r.note))
-        .forceInsertQuery(
-          Query(time, cal, note).filterNot(_ =>
-            records.filter(r => r.day =!= time && r.calorie =!= cal && r.note =!= note).exists))
-    }
-    DBIO.sequence(ans).withPinnedSession
-  }
-
-  def recordDetails(recordId:Long): Future[Option[Record]] = db.run {
-    records.filter(_.id === recordId).result.headOption
-  }
-
-  ///////////////////// DATAS //////////////////////
 
   def all(category:Option[String],lastDays:Option[Int],
           durationBiggerSeconds:Option[Long],
@@ -282,9 +238,7 @@ class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfi
     }
   }
 
-  def schema: String = records.schema.createStatements.mkString("\n") + "\n\n" +
-               records.schema.dropIfExistsStatements.mkString("\n") + "\n\n" +
-               datas.schema.createStatements.mkString("\n") + "\n\n" +
+  def schema: String = datas.schema.createStatements.mkString("\n") + "\n\n" +
                datas.schema.dropIfExistsStatements.mkString("\n")
 
 }
