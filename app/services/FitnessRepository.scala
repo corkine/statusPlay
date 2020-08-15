@@ -214,31 +214,30 @@ class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfi
           durationBiggerSeconds:Option[Long],
           skipRow:Option[Long],limitRow:Option[Long]): Future[Seq[Data]] = {
     @inline def handledCategory(datas:TableQuery[Datas]): Option[Query[Datas, Data, Seq]] = {
-      category.map(c => (Category.str2Cats(c) match {
-        case null => Left("ERROR")
-        case o => Right(o)
-      }):Either[String,Category]) match {
-        case Some(Left(_)) => None
-        case None => Some(datas)
-        case Some(Right(c)) => Some(datas.filter(_.category === c))
+      if (category.isEmpty) return Some(datas) //fetch all data
+      Category.str2Cats(category.get) match {
+        case null => None //some spell error
+        case o => Some(datas.filter(_.category === o)) //filter some data
       }
     }
     @inline def handleDurationAndDays(datas:Query[Datas,Data,Seq]): Query[Datas, Data, Seq] = {
-      val data1 = lastDays match {
+      val datasInternal = lastDays match {
         case None => datas
         case Some(d) => datas.filter(_.start >= LocalDateTime.now().minusDays(d))
-      }
+      } //handle lastDay first
       durationBiggerSeconds match {
-        case None => data1
-        case Some(dLimit) => data1.filter(_.duration >= Duration.ofSeconds(dLimit))
-      }
+        case None => datasInternal
+        case Some(dLimit) => datasInternal.filter(_.duration >= Duration.ofSeconds(dLimit))
+      } //then handle durationBiggerSeconds
     }
+    //provide default skip and limit value for performance
     val skied = skipRow.getOrElse(0L).toInt
     val limited = limitRow.getOrElse(10000L).toInt
     db.run {
       handledCategory(datas) match {
         case None => DBIO.successful(Seq())
-        case Some(data2) => handleDurationAndDays(data2).sortBy(_.start.desc).drop(skied).take(limited).result
+        case Some(datasInternal) => handleDurationAndDays(datasInternal)
+          .sortBy(_.start.desc).drop(skied).take(limited).result
       }
     }
   }
