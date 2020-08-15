@@ -13,10 +13,12 @@ GET     /status/:websiteId/activities      controllers.ActivityController.checkA
 
 # [Public]
 POST    /fitness/iOSUpload              controllers.FitnessController.insert
-GET     /fitness/all                    controllers.FitnessController.all
+GET     /fitness/data                   controllers.FitnessController.all(category:Option[String],lastDays:Option[Int],durationBiggerSeconds:Option[Long],skip:Option[Long],limit:Option[Long])
 # [Admin]
 GET     /fitness/schema                 controllers.FitnessController.schema
-# [User]
+
+# ////////// OLD-STYLE FITNESS //////////////
+GET     /fitness/allRecord              controllers.FitnessController.allRecord
 GET     /fitness/details/:recordId      controllers.FitnessController.recordDetails(recordId:Long)
 
 GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)
