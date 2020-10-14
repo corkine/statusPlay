@@ -15,8 +15,10 @@ libraryDependencies ++= Seq(ehcache , ws , specs2 % Test , guice )
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "5.0.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
-  "com.h2database" % "h2" % "1.4.199"
+  "com.h2database" % "h2" % "1.4.199",
+  "com.aliyun.oss" % "aliyun-sdk-oss" % "2.8.3"
 )
+
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
 
