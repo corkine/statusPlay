@@ -2,14 +2,14 @@ GET     /                                  controllers.Default.todo
 # [Public]
 GET     /status                            controllers.Default.redirect(to="/status/all")
 GET     /status/                           controllers.Default.redirect(to="/status/all")
-GET     /status/all                        controllers.ActivityController.all
+GET     /status/all                        controllers.ActivityController.all(lastDay:Option[Long])
 # [Admin]
 GET     /status/schema                     controllers.ActivityController.schema
 GET     /status/websiteAdd                 controllers.ActivityController.addWebsite(name:String,url:String,note:Option[String],priority:Option[Int])
 GET     /status/:websiteId/delete          controllers.ActivityController.deleteWebsite(websiteId:Long)
 GET     /status/:websiteId/update          controllers.ActivityController.updateWebsite(websiteId:Long,name:Option[String],url:Option[String],note:Option[String],priority:Option[Int])
 # [User]
-GET     /status/:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long)
+GET     /status/:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long,skip:Option[Int],limit:Option[Int])
 
 # [User]
 POST    /fitness/iOSUpload              controllers.FitnessController.insert

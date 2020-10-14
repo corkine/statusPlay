@@ -54,25 +54,29 @@ class ActivityController @Inject()(cc: ControllerComponents, ar: ActivityReposit
     }
   }
 
-  def checkActivities(websiteId:Long): Action[AnyContent] = Action.async { req =>
+  def checkActivities(websiteId:Long,skip:Option[Int],limit:Option[Int]): Action[AnyContent] = Action.async { req =>
     authUsers(req) flatMap {
       case Right(value) => Future(value)
-      case Left(_) => ar.websiteActivitiesWithInfoByAction(websiteId) map {
+      case Left(_) => ar.websiteActivitiesWithInfoByAction(websiteId,skip,limit) map {
         case Left(value) => Ok(Json.obj("message" -> value))
         case Right(value) => Ok(Json.obj("website" -> value._1, "activities" -> value._2))
       }
     }
   }
 
-  def all: Action[AnyContent] = Action.async {
-    ar.websitesInfo(LocalDateTime.now().minusDays(3),LocalDateTime.now()) map { r =>
+  def all(lastDay:Option[Long]): Action[AnyContent] = Action.async {
+    val fromDate = LocalDateTime.now().minusDays(lastDay.getOrElse(3))
+    val endDate = LocalDateTime.now()
+    ar.websitesInfo(fromDate,endDate) map { r =>
       Ok(Json.toJson(r.map { e => Json.obj(
         "name" -> e._1,
         "websiteUrl" -> e._2,
         "websiteNote" -> e._3,
         "websiteId" -> e._4,
         "healthy" -> e._5,
-        "activityCount" -> e._6
+        "activityCount" -> e._6,
+        "from" -> fromDate,
+        "end" -> endDate
       )}))
     }
   }

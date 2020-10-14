@@ -160,12 +160,12 @@ class ActivityRepository @Inject() (protected val dbConfigProvider: DatabaseConf
   /**
    * 获取指定网站分页查询的所有 Activity 数据（先查询是否存在网站 id）
    */
-  def websiteActivitiesWithInfoByAction(websiteId:Long, skip:Int = 0, limit:Int = 100):
+  def websiteActivitiesWithInfoByAction(websiteId:Long, skip:Option[Int], limit:Option[Int]):
     Future[Either[String,(Website,Seq[Activity])]] = db.run {
     websites.filter(_.id === websiteId).result.headOption flatMap({
       case None => DBIO.successful(Left(s"Can't find website Id $websiteId in database."))
       case Some(w) => activities.filter(_.website_id === websiteId)
-        .drop(skip).take(limit).result map { as => Right(w -> as) }
+        .sortBy(_.checkTime.desc).drop(skip.getOrElse(0)).take(limit.getOrElse(100)).result map { as => Right(w -> as) }
     }: Option[Website] => DBIOAction[Either[String,(Website,Seq[Activity])],NoStream,Effect.All])
   }
 
