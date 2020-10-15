@@ -1,8 +1,8 @@
 GET     /                                  controllers.Default.todo
 # [Public]
-GET     /status                            controllers.Default.redirect(to="/status/all")
-GET     /status/                           controllers.Default.redirect(to="/status/all")
-GET     /status/all                        controllers.ActivityController.all(lastDay:Option[Long])
+GET     /status                            controllers.Default.redirect(to="/status/data")
+GET     /status/                           controllers.Default.redirect(to="/status/data")
+GET     /status/data                       controllers.ActivityController.all(lastDay:Option[Long])
 # [Admin]
 GET     /status/schema                     controllers.ActivityController.schema
 GET     /status/websiteAdd                 controllers.ActivityController.addWebsite(name:String,url:String,note:Option[String],priority:Option[Int])
@@ -13,12 +13,20 @@ GET     /status/:websiteId/activities      controllers.ActivityController.checkA
 
 # [User]
 POST    /fitness/iOSUpload              controllers.FitnessController.insert
+GET     /fitness                        controllers.Default.redirect(to="/fitness/data")
+GET     /fitness/                       controllers.Default.redirect(to="/fitness/data")
 GET     /fitness/data                   controllers.FitnessController.all(category:Option[String],lastDays:Option[Int],durationBiggerSeconds:Option[Long],skip:Option[Long],limit:Option[Long])
 # [Admin]
 GET     /fitness/schema                 controllers.FitnessController.schema
 
-GET     /goods/test                     controllers.GoodsController.test
-POST    /goods/add                      controllers.GoodsController.addGood
+GET     /goods/schema                   controllers.GoodsController.schema
+GET     /goods                          controllers.Default.redirect(to="/goods/data")
+GET     /goods/                         controllers.Default.redirect(to="/goods/data")
+GET     /goods/data                     controllers.GoodsController.goodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],skip:Option[Long],take:Option[Long])
+GET     /goods/:goodId                  controllers.GoodsController.good(goodId)
+GET     /goods/:goodId/delete           controllers.GoodsController.deleteGood(goodId)
+POST    /goods/add                      controllers.GoodsController.goodAdd
+POST    /goods/:goodId/update           controllers.GoodsController.editGood(goodId)
 
 GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)
 

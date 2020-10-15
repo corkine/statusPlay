@@ -188,7 +188,7 @@ class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfi
     }
     //provide default skip and limit value for performance
     val skied = skipRow.getOrElse(0L).toInt
-    val limited = limitRow.getOrElse(10000L).toInt
+    val limited = limitRow.getOrElse(1000L).toInt
     db.run {
       handledCategory(datas) match {
         case None => DBIO.successful(Seq())

@@ -33,7 +33,7 @@ class OSSUtils @Inject()(playConfig:Configuration) {
   def upload(file: File):String = {
     val client = newClient
     val time = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-    val filePath = s"$time/${UUID.randomUUID().toString.replace("-","").substring(0,7)}"
+    val filePath = s"goods/$time/${UUID.randomUUID().toString.replace("-","").substring(0,7)}"
     val fileUrl = filePath + s"_${file.getName.replace(" ","")}"
 
     try {
