@@ -15,12 +15,12 @@ case class Good(name:String,
                 picture:Option[String], description:Option[String], kind:Option[String],
                 addTime:LocalDateTime = LocalDateTime.now(),
                 updateTime:LocalDateTime = LocalDateTime.now(),
-                id:String = Good.randomGoodID)
+                id:String = Good.randomUpperGoodID)
 
 case class GoodLog(name:String, description:Option[String], createAt:LocalDateTime, goodId: String, logId:Long = 0L)
 
 object Good {
-  def randomGoodID: String = UUID.randomUUID().toString.substring(0,7).toUpperCase
+  def randomUpperGoodID: String = ("CM" + UUID.randomUUID().toString.substring(0,5)).toUpperCase
   implicit val goodF: Format[Good] =
     ((JsPath \ "name").format[String] and
       (JsPath \ "picture").formatNullable[String] and

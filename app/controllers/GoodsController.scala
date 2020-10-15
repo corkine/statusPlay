@@ -34,9 +34,10 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
 
   /**
    * 查 - 单个
-   * @param goodId Good Id
+   * @param oGoodId Good Id
    */
-  def good(goodId:String): Action[AnyContent] = Action.async { r =>
+  def good(oGoodId:String): Action[AnyContent] = Action.async { r =>
+    val goodId = oGoodId.toUpperCase()
     authUsers(r) flatMap {
       case Right(value) => Future(value)
       case Left(_) => gr.singleGood(goodId).map {
@@ -47,7 +48,11 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
   }
 
   /**
-   * 查 - 统计
+   * 查 - 全部
+   * @param lastDay 最近几天添加的数据
+   * @param recentFirst 优先显示最近添加的
+   * @param skip 跳过 - 用于分页
+   * @param take 限制 - 用于分页
    */
   def goodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],skip:Option[Long],take:Option[Long]): Action[AnyContent] = Action.async { r =>
     authAdmin(r) flatMap {
@@ -61,10 +66,11 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
 
   /**
    * 删
-   * @param goodId Good Id
+   * @param oGoodId Good Id
    * @return
    */
-  def deleteGood(goodId:String): Action[AnyContent] = Action.async { r =>
+  def deleteGood(oGoodId:String): Action[AnyContent] = Action.async { r =>
+    val goodId = oGoodId.toUpperCase()
     authAdmin(r) flatMap {
       case Right(value) => Future(value)
       case Left(_) => gr.deleteGood(goodId).map {
@@ -76,6 +82,13 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
 
   /**
    * 增
+   * 为 iOS 的捷径所设计，允许通过 POST multipartFormData or formUrlEncoded 来添加数据
+   * 参数：goodId - 字符串，非必须，缺失时系统自动生成，不区分大小写，不允许为空
+   * 参数：addTime - 字符串，ISO_DATE_TIME 格式，非必须，缺失时设定为当前值，不允许为空
+   * 参数：name - 字符串，必须
+   * 参数：description - 字符串，非必须，允许为空
+   * 参数：kind - 字符串，非必须，允许为空
+   * 参数：picture - 图片文件，非必须，允许为空
    */
   def goodAdd: Action[AnyContent] = Action.async { r =>
     authUsers(r) flatMap {
@@ -100,10 +113,13 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
 
   private def genGoodAdd(map:Map[String,Seq[String]],
                          pic:Option[MultipartFormData.FilePart[TemporaryFile]]): Either[String,Good] = {
-    val goodId = map.get("goodId").map(_.head).getOrElse(Good.randomGoodID)
+    val goodId = map.get("goodId").map(_.head.toUpperCase).getOrElse(Good.randomUpperGoodID)
     val addTime = map.get("addTime").map(_.head)
-      .map(LocalDateTime.parse(_,DateTimeFormatter.ISO_DATE_TIME))
-      .getOrElse(LocalDateTime.now())
+      .flatMap(s => try {
+        Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE_TIME))
+      } catch {
+        case _: Throwable => None
+      }).getOrElse(LocalDateTime.now())
     val e_name = map.get("name").map(_.head).toRight("Can't parse name.")
     val m_desc = map.get("description").map(_.head)
     val m_kind = map.get("kind").map(_.head)
@@ -128,12 +144,20 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
 
   /**
    * 改
-   * @param goodsId 需要修改的 Goods ID
+   * 为 iOS 的捷径所设计，允许通过 POST multipartFormData or formUrlEncoded 来修改数据
+   * 参数：addTime - 字符串，ISO_DATE_TIME 格式，非必须，缺失时设定为当前值，不允许为空
+   * 参数：name - 字符串，必须
+   * 参数：description - 字符串，非必须，允许为空
+   * 参数：kind - 字符串，非必须，允许为空
+   * 参数：picture - 图片文件，非必须，允许为空
+   * 参数：noPicDelete - 字符串，非必须，"1"表示没有上传 picture 图片时做删除更新，其他表示没有
+   * 上传 picture 图片时做不更新之前的 picture 字段（之前可能有或者无图片）
    */
-  def editGood(goodsId:String): Action[AnyContent] = Action.async { r =>
+  def goodEdit(oGoodId:String): Action[AnyContent] = Action.async { r =>
+    val goodId = oGoodId.toUpperCase
     authAdmin(r) flatMap {
       case Right(e) => Future(e)
-      case Left(_) => gr.singleGood(goodsId).flatMap {
+      case Left(_) => gr.singleGood(goodId).flatMap {
           case Left(value) => Future(message(value))
           case Right(g) =>
             val ans = r.body.asMultipartFormData.map { m => m.dataParts -> m.file("picture") }
@@ -187,6 +211,19 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
     }
   }
 
+  /**
+   * 显示内容详情：三种情况：任何权限下均可以检查是否 GOODID 是否存在系统中，登录权限下可查看产品，没有 GOODID 对应则进行提示。
+   * @param oGoodId 不区分大小写的用户输入 ID
+   */
+  def goodDetail(oGoodId:String) = Action.async { r =>
+    val goodId = oGoodId.toUpperCase()
+    authUsers(r) flatMap { r =>
+      gr.singleGood(goodId).map {
+        case Left(_) => Ok(views.html.details(None,auth = r.isLeft, id=goodId))
+        case Right(g) => Ok(views.html.details(Some(g),auth = r.isLeft, id=goodId))
+      }
+    }
+  }
   def schema: Action[AnyContent] = Action.async { r =>
     authAdmin(r) flatMap {
       case Right(value) => Future(value)

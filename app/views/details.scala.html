@@ -1,0 +1,66 @@
+@(good:Option[services.Good], auth:Boolean, id:String)
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@@4.5.0/dist/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+        <title>
+        @if(good.nonEmpty) {
+            @if(auth) {
+                @{s"CMGOOD: ${good.get.name}#${good.get.id}"}
+            } else {
+                @{s"CMGOOD: #${good.get.id}"}
+            }
+        } else {
+            CMGOOD: ✕@id
+        }
+        </title>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12 col-md-8 col-lg-6 col-xl-4">
+                    @if(good.nonEmpty) {
+                        @if(auth) {
+                            <div class="card mb-3">
+                                <img src="@good.get.picture.getOrElse(".")" class="card-img-top" alt="...">
+                                <div class="card-body">
+                                    <h5 class="card-title">@good.get.name <span style="vertical-align: top" class="badge badge-secondary">#@good.get.id</span></h5>
+                                    <p class="card-text">@good.get.description</p>
+                                    <p class="card-text">
+                                        <span class="badge badge-light">@good.get.kind</span>
+                                        <small class="text-muted">
+                                            @defining(java.time.format.DateTimeFormatter.ofPattern("YYYY/MM/dd HH:mm")) { formatter =>
+                                                <svg style="margin-bottom: 4px" class="icon" width="1em" height="1em" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#707070" d="M778.666667 170.666667a32 32 0 0 1 32 32v362.666666a32 32 0 0 1-64 0v-362.666666a32 32 0 0 1 32-32zM170.666667 778.666667a32 32 0 0 1 32-32h362.666666a32 32 0 0 1 0 64h-362.666666a32 32 0 0 1-32-32zM353.28 308.053333a32 32 0 0 0-45.226667 45.226667l277.333334 277.333333a32 32 0 1 0 45.226666-45.226666l-277.333333-277.333334z" /></svg>
+                                                @{good.get.addTime.format(formatter)} &nbsp;
+                                                <svg style="margin-bottom: 4px" class="icon" width="1em" height="1em" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#707070" d="M385.386667 691.84c-16.661333 16.661333-43.669333 16.661333-60.330667 0l0 0c-16.661333-16.661333-16.661333-43.669333 0-60.330667L832.768 123.797333c16.661333-16.661333 43.669333-16.661333 60.330667 0l0 0c16.661333 16.661333 16.661333 43.669333 0 60.330667L385.386667 691.84zM874.666667 429.141333c-11.776 0-21.333333 9.557333-21.333333 21.333333l0 384C853.333333 858.005333 824.597333 874.666667 801.066667 874.666667l-597.333333 0C180.202667 874.666667 170.666667 858.005333 170.666667 834.474667l0-597.333333C170.666667 213.632 180.202667 192 203.733333 192L554.666667 192l0 2.304c21.333333-0.490667 20.330667-9.685333 20.330667-21.162667 0-11.392 1.002667-20.501333-20.330667-21.12L554.666667 149.333333 203.733333 149.333333C156.608 149.333333 128 190.016 128 237.141333l0 597.333333C128 881.621333 156.608 917.333333 203.733333 917.333333l597.333333 0c47.125333 0 94.933333-35.712 94.933333-82.858667l0-384C896 438.698667 886.442667 429.141333 874.666667 429.141333z" /></svg>
+                                                @good.get.updateTime.format(formatter)
+                                            }
+                                        </small></p>
+                                </div>
+                            </div>
+                        } else {
+                            <div class="alert alert-success" role="alert">
+                              <h4 class="alert-heading">
+                              ✔︎ <span style="vertical-align: top" class="badge badge-pill badge-light">#@good.get.id</span> Check Passed.</h4>
+                              <p></p><hr>
+                              <p class="mb-0">But you don't have more permissions, try to pass the authentication to continue.</p>
+                            </div>
+                        }
+                    } else {
+                        <div class="alert alert-danger" role="alert">
+                              <h4 class="alert-heading">
+                              ✘ Not Found <span style="vertical-align: top" class="badge badge-pill badge-warning">#@id</span></h4>
+                              <p></p><hr>
+                              <p class="mb-0">This ID was not found in this system, please make sure it is spelled correctly. Also, this may be a temporary error, please try again later.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@@4.5.0/dist/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    </body>
+</html>
