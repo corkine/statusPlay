@@ -258,7 +258,11 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
     authUsers(r) flatMap { r =>
       gr.singleGood(goodId).map {
         case Left(_) => Ok(views.html.details(None,auth = r.isLeft, id=goodId))
-        case Right(g) => Ok(views.html.details(Some(g),auth = r.isLeft, id=goodId))
+        case Right(g) =>
+          val fakeg = Good("好看的茶杯",Some("http://static2.mazhangjing.com/goods/20201016/8d3fbdc_Camera_2020-10-16_下午3.25.17.jpeg"),
+            Some("双伟送的好看的茶杯"),Some("日用品"),CurrentState.NotActive,
+          Importance.N,Some(LocalDateTime.now().plusDays(100)),Some(Duration.ofDays(100)))
+          Ok(views.html.details(Some(fakeg),auth = r.isLeft, id=goodId))
       }
     }
   }
