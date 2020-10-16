@@ -1,7 +1,7 @@
 package controllers
 
 import java.nio.file.Paths
-import java.time.LocalDateTime
+import java.time.{Duration, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
 import javax.inject.{Inject, Singleton}
@@ -10,7 +10,7 @@ import play.api.Logger
 import play.api.libs.Files.TemporaryFile
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.{AuthController, AuthService, Good, GoodsRepository}
+import services.{AuthController, AuthService, CurrentState, Good, GoodsRepository, Importance}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -88,6 +88,10 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * 参数：name - 字符串，必须
    * 参数：description - 字符串，非必须，允许为空
    * 参数：kind - 字符串，非必须，允许为空
+   * 参数：currentState - 字符串，不区分大小写，非必须，缺失时设定为 Ordinary，不允许为空
+   * 参数：importance - 字符 ABCDEN，不区分大小写，非必须，缺失时设定为 N，不允许为空
+   * 参数：validUntil - 字符串，ISO_DATE_TIME 格式，非必须，允许为空
+   * 参数：estimatedLiftTime - 字符串，表示预计使用天数，非必须，允许为空
    * 参数：picture - 图片文件，非必须，允许为空
    */
   def goodAdd: Action[AnyContent] = Action.async { r =>
@@ -115,30 +119,44 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
                          pic:Option[MultipartFormData.FilePart[TemporaryFile]]): Either[String,Good] = {
     val goodId = map.get("goodId").map(_.head.toUpperCase).getOrElse(Good.randomUpperGoodID)
     val addTime = map.get("addTime").map(_.head)
-      .flatMap(s => try {
-        Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE_TIME))
-      } catch {
-        case _: Throwable => None
-      }).getOrElse(LocalDateTime.now())
+        .flatMap(s => try {
+          Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE_TIME))
+        } catch {
+          case _: Throwable => None
+        }).getOrElse(LocalDateTime.now())
+    val currentState = map.get("currentState")
+        .flatMap(s => CurrentState.strUpper2CS(s.head))
+        .getOrElse(CurrentState.Ordinary)
+    val importance = map.get("importance")
+        .flatMap(s => Importance.strUpper2IM(s.head))
+        .getOrElse(Importance.N)
     val e_name = map.get("name").map(_.head).toRight("Can't parse name.")
     val m_desc = map.get("description").map(_.head)
+    val m_validUntil = map.get("validUntil").map(_.head).flatMap(s => try {
+          Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE))
+        } catch { case _: Throwable => None })
+    val m_estimatedLiftTime = map.get("estimatedLiftTime").flatMap(s => try {
+          Some(Duration.ofDays(s.head.toLong))
+        } catch { case _: Throwable => None })
     val m_kind = map.get("kind").map(_.head)
     val m_picture = pic.map { p =>
-      if (p.fileSize == 0) Left("File size 0 Error.") else {
-        val file = Paths.get(p.filename.replace("，","_")
-          .replace(" ","_")).toFile
-        p.ref.moveTo(file)
-        val url = oss.upload(file)
-        file.delete()
-        if (url != null) Right(url) else Left("Upload Error.")
-      }
+        if (p.fileSize == 0) Left("File size 0 Error.") else {
+          val file = Paths.get(p.filename.replace("，","_")
+            .replace(" ","_")).toFile
+          p.ref.moveTo(file)
+          val url = oss.upload(file)
+          file.delete()
+          if (url != null) Right(url) else Left("Upload Error.")
+        }
     }
     (e_name,m_picture) match {
       case (Left(e1),Some(Left(e2))) => Left(e1 + "; " + e2)
       case (Left(e1),_) => Left(e1)
       case (Right(_),Some(Left(e2))) => Left(e2)
-      case (Right(n),Some(Right(p))) => Right(Good(n,Some(p),m_desc,m_kind,addTime,id=goodId))
-      case (Right(n),None) => Right(Good(n,None,m_desc,m_kind,addTime,id=goodId))
+      case (Right(n),Some(Right(p))) => Right(Good(n,Some(p),m_desc,m_kind,currentState,importance,m_validUntil,
+          m_estimatedLiftTime, addTime, id = goodId))
+      case (Right(n),None) => Right(Good(n,None,m_desc,m_kind,currentState,importance,m_validUntil,
+          m_estimatedLiftTime, addTime, id = goodId))
     }
   }
 
@@ -149,6 +167,10 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * 参数：name - 字符串，必须
    * 参数：description - 字符串，非必须，允许为空
    * 参数：kind - 字符串，非必须，允许为空
+   * 参数：currentState - 字符串，不区分大小写，非必须，缺失时设定为 Ordinary，不允许为空
+   * 参数：importance - 字符 ABCDEN，不区分大小写，非必须，缺失时设定为 N，不允许为空
+   * 参数：validUntil - 字符串，ISO_DATE 格式，非必须，允许为空
+   * 参数：estimatedLiftTime - 字符串，表示预计使用天数，非必须，允许为空
    * 参数：picture - 图片文件，非必须，允许为空
    * 参数：noPicDelete - 字符串，非必须，"1"表示没有上传 picture 图片时做删除更新，其他表示没有
    * 参数：newGoodId - 字符串，非必须，如果没有则不修改其 goodId 主键
@@ -189,6 +211,18 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
       case "1" => true
       case _ => false
     }
+    val currentState = map.get("currentState")
+      .flatMap(s => CurrentState.strUpper2CS(s.head))
+      .getOrElse(goodOld.currentState)
+    val importance = map.get("importance")
+      .flatMap(s => Importance.strUpper2IM(s.head))
+      .getOrElse(goodOld.importance)
+    val m_validUntil = map.get("validUntil").map(_.head).flatMap(s => try {
+      Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE))
+    } catch { case _: Throwable => None }).orElse(goodOld.validUntil)
+    val m_estimatedLiftTime = map.get("estimatedLiftTime").flatMap(s => try {
+      Some(Duration.ofDays(s.head.toLong))
+    } catch { case _: Throwable => None }).orElse(goodOld.estimatedLiftTime)
     val updatedId = map.get("newGoodId").map(_.head.toUpperCase).getOrElse(goodOld.id)
     val addTime = map.get("addTime").map(_.head)
       .map(LocalDateTime.parse(_,DateTimeFormatter.ISO_DATE_TIME))
@@ -209,7 +243,9 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
       case None if updatePic => Right(None) //如果没有最新提交，且需要更新照片，则删除照片
     }
     m_picture map { p => goodOld.copy(name = name, description = m_desc, kind = m_kind,
-      addTime = addTime, updateTime = LocalDateTime.now(), picture = p, id = updatedId)
+      currentState = currentState, importance = importance, validUntil = m_validUntil,
+      estimatedLiftTime = m_estimatedLiftTime, addTime = addTime, updateTime = LocalDateTime.now(),
+      picture = p, id = updatedId)
     }
   }
 

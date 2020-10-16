@@ -1,6 +1,6 @@
 package services
 
-import java.time.LocalDateTime
+import java.time.{Duration, LocalDateTime}
 import java.util.UUID
 
 import com.google.inject.{Inject, Singleton}
@@ -13,9 +13,63 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class Good(name:String,
                 picture:Option[String], description:Option[String], kind:Option[String],
+                currentState: CurrentState = CurrentState.Ordinary,
+                importance: Importance = Importance.N,
+                validUntil: Option[LocalDateTime] = None,
+                estimatedLiftTime: Option[Duration] = None,
                 addTime:LocalDateTime = LocalDateTime.now(),
                 updateTime:LocalDateTime = LocalDateTime.now(),
                 id:String = Good.randomUpperGoodID)
+
+sealed case class CurrentState(desc:String)
+object CurrentState {
+  val Active: CurrentState = CurrentState("Active")
+  val Ordinary: CurrentState = CurrentState("Ordinary")
+  val NotActive: CurrentState = CurrentState("NotActive")
+  def strUpper2CS(str:String):Option[CurrentState] = str.toUpperCase match {
+    case a if a == "ACTIVE" => Some(Active)
+    case b if b == "ORDINARY" => Some(Ordinary)
+    case c if c == "NOTACTIVE" => Some(NotActive)
+    case _ => None
+  }
+  implicit val stateF: Format[CurrentState] = new Format[CurrentState] {
+    override def reads(json: JsValue): JsResult[CurrentState] = json match {
+      case JsString(value) => strUpper2CS(value) match {
+        case None => JsError("Can't parse except Active, Ordinary and NotActive")
+        case Some(value) => JsSuccess(value)
+      }
+      case _ => JsError("Can't parse except Active, Ordinary and NotActive")
+    }
+    override def writes(o: CurrentState): JsValue = JsString(o.desc)
+  }
+}
+
+sealed case class Importance(desc:String)
+object Importance {
+  val A: Importance = Importance("A")
+  val B: Importance = Importance("B")
+  val C: Importance = Importance("C")
+  val D: Importance = Importance("D")
+  val N: Importance = Importance("N")
+  def strUpper2IM(str:String):Option[Importance] = str.toUpperCase match {
+    case "A" => Some(A)
+    case "B" => Some(B)
+    case "C" => Some(C)
+    case "D" => Some(D)
+    case "N" => Some(N)
+    case _ => None
+  }
+  implicit val impF: Format[Importance] = new Format[Importance] {
+    override def reads(json: JsValue): JsResult[Importance] = json match {
+      case JsString(v) => strUpper2IM(v) match {
+        case None => JsError("Can't parse except A,B,C,D,N")
+        case Some(value) => JsSuccess(value)
+      }
+      case _ => JsError("Can't parse except A,B,C,D,N")
+    }
+    override def writes(o: Importance): JsValue = JsString(o.desc)
+  }
+}
 
 case class GoodLog(name:String, description:Option[String], createAt:LocalDateTime, goodId: String, logId:Long = 0L)
 
@@ -26,6 +80,10 @@ object Good {
       (JsPath \ "picture").formatNullable[String] and
       (JsPath \ "description").formatNullable[String] and
       (JsPath \ "kind").formatNullable[String] and
+      (JsPath \ "currentState").format[CurrentState] and
+      (JsPath \ "importance").format[Importance] and
+      (JsPath \ "validUntil").formatNullable[LocalDateTime] and
+      (JsPath \ "estimatedLiftTime").formatNullable[Duration] and
       (JsPath \ "addTime").format[LocalDateTime] and
       (JsPath \ "updateTime").format[LocalDateTime] and
       (JsPath \ "id").format[String])(Good.apply, unlift(Good.unapply))
@@ -41,17 +99,31 @@ object GoodLog {
 }
 
 trait GoodsComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
+
   import profile.api._
+
+  implicit val csType: BaseColumnType[CurrentState] =
+    MappedColumnType.base[CurrentState,String](_.desc,CurrentState(_))
+  implicit val imType: BaseColumnType[Importance] =
+    MappedColumnType.base[Importance,String](_.desc,Importance(_))
+  implicit val durationType: BaseColumnType[Duration] =
+    MappedColumnType.base[Duration,Long](_.getSeconds, Duration.ofSeconds)
+
   class GoodTable(tag:Tag) extends Table[Good](tag, "goods") {
     def name = column[String]("name")
     def picture = column[Option[String]]("picture")
     def description = column[Option[String]]("description")
     def kind = column[Option[String]]("kind")
+    def currentState = column[CurrentState]("currentState")
+    def importance = column[Importance]("importance")
+    def validUntil = column[Option[LocalDateTime]]("validUntil")
+    def estimatedLiftTime = column[Option[Duration]]("estimatedLiftTime")
     def addTime = column[LocalDateTime]("addTime")
     def updateTime = column[LocalDateTime]("updateTime")
     def id = column[String]("id",O.PrimaryKey)
     override def * =
-      (name,picture,description,kind,addTime,updateTime,id) <> ((Good.apply _).tupled, Good.unapply)
+      (name,picture,description,kind,currentState,importance,validUntil, estimatedLiftTime,
+        addTime,updateTime,id) <> ((Good.apply _).tupled, Good.unapply)
   }
 
   lazy val goods = TableQuery[GoodTable]

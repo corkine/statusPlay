@@ -2,7 +2,6 @@ logs
 project/project
 project/target
 target
-data
 tmp
 .history
 dist

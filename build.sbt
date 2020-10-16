@@ -1,6 +1,6 @@
 name := "statusPlay"
  
-version := "2.5"
+version := "2.6"
       
 lazy val `statusplay` = (project in file(".")).enablePlugins(PlayScala)
 
@@ -34,5 +34,7 @@ assemblyMergeStrategy in assembly := {
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
 }
+
+
 
       
