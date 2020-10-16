@@ -151,6 +151,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * 参数：kind - 字符串，非必须，允许为空
    * 参数：picture - 图片文件，非必须，允许为空
    * 参数：noPicDelete - 字符串，非必须，"1"表示没有上传 picture 图片时做删除更新，其他表示没有
+   * 参数：newGoodId - 字符串，非必须，如果没有则不修改其 goodId 主键
    * 上传 picture 图片时做不更新之前的 picture 字段（之前可能有或者无图片）
    */
   def goodEdit(oGoodId:String): Action[AnyContent] = Action.async { r =>
@@ -169,7 +170,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
               case Left(err) => Future(message(err))
               case Right(g) =>
                 logI(s"Parsed goods $g now...")
-                gr.updateGood(g).map {
+                gr.updateGood(goodId, g).map {
                   case Left(err) => message(err)
                   case Right(ans) => Ok(Json.obj("message" -> "Update successful.", "status" -> 1, "good" -> ans))
                 }
@@ -188,6 +189,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
       case "1" => true
       case _ => false
     }
+    val updatedId = map.get("newGoodId").map(_.head.toUpperCase).getOrElse(goodOld.id)
     val addTime = map.get("addTime").map(_.head)
       .map(LocalDateTime.parse(_,DateTimeFormatter.ISO_DATE_TIME))
       .getOrElse(goodOld.addTime)
@@ -207,7 +209,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
       case None if updatePic => Right(None) //如果没有最新提交，且需要更新照片，则删除照片
     }
     m_picture map { p => goodOld.copy(name = name, description = m_desc, kind = m_kind,
-      addTime = addTime, updateTime = LocalDateTime.now(), picture = p)
+      addTime = addTime, updateTime = LocalDateTime.now(), picture = p, id = updatedId)
     }
   }
 

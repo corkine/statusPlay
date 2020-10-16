@@ -111,10 +111,10 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
         case e:Throwable => Left(s"Add Failure. ${e.getMessage}")
       }
 
-  def updateGood(good:Good) =
-    db.run(goods.filter(_.id === good.id).update(good))
+  def updateGood(goodId:String, good:Good) =
+    db.run(goods.filter(_.id === goodId).update(good))
       .map {
-        case 0 => Left(s"Can't update this good ${good.id}")
+        case 0 => Left(s"Can't update this good ${goodId}")
         case _ => Right(good)
       }
   /*
