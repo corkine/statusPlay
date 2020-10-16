@@ -1,6 +1,6 @@
 name := "statusPlay"
  
-version := "2.4"
+version := "2.5"
       
 lazy val `statusplay` = (project in file(".")).enablePlugins(PlayScala)
 
@@ -23,6 +23,7 @@ libraryDependencies ++= Seq(
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
 
 assemblyMergeStrategy in assembly := {
+    case PathList("org", "apache", "commons", "logging", xs @ _*) => MergeStrategy.first
     case manifest if manifest.contains("MANIFEST.MF") =>
       MergeStrategy.discard
     case moduleInfo if moduleInfo.contains("module-info.class") =>
