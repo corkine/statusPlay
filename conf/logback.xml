@@ -34,7 +34,7 @@
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
 
   <!--=========== DATABASE ===========-->
-<!--  &lt;!&ndash;SQL Send to DB&ndash;&gt;
+  <!--&lt;!&ndash;SQL Send to DB&ndash;&gt;
   <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG" />
   &lt;!&ndash;Set Param to Query&ndash;&gt;
   <logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG" />

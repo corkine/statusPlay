@@ -4,6 +4,7 @@ import java.util.Base64
 
 import play.api.libs.functional.syntax._
 import javax.inject.{Inject, Singleton}
+import play.api.cache.AsyncCacheApi
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.http.HeaderNames
 import play.api.libs.functional.syntax.unlift
@@ -114,6 +115,7 @@ trait AuthController { self: AbstractController =>
   import AuthBasic._
 
   val auth: AuthService
+  val cache: AsyncCacheApi
   implicit val ec: ExecutionContext
 
   @inline def message(c:String): Result = Ok(Json.obj("message" -> c))
@@ -124,7 +126,7 @@ trait AuthController { self: AbstractController =>
         .withHeaders(WWW_AUTHENTICATE -> "Basic")))
       case Some(eit) => eit match {
         case Left(v) => Future(Right(v))
-        case Right((u,p)) => auth.check(u,p).map {
+        case Right((u,p)) => cache.getOrElseUpdate[Option[User]](s"user.$u") { auth.check(u,p) }.map {
           case Some(user) if userType.contains(user.userType) => Left(user)
           case None => Right(message("User token check failed."))
           case _ => Right(message("User not authorized, may not in super higher group."))

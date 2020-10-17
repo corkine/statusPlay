@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.{Inject, Singleton}
 import oss.OSSUtils
 import play.api.Logger
+import play.api.cache.AsyncCacheApi
 import play.api.libs.Files.TemporaryFile
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -16,7 +17,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
-                                oss:OSSUtils, val auth: AuthService)
+                                oss:OSSUtils,
+                                val cache: AsyncCacheApi,
+                                val auth: AuthService)
                                (implicit val ec: ExecutionContext)
   extends AbstractController(cc) with AuthController {
 
@@ -259,10 +262,10 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
       gr.singleGood(goodId).map {
         case Left(_) => Ok(views.html.details(None,auth = r.isLeft, id=goodId))
         case Right(g) =>
-          val fakeg = Good("好看的茶杯",Some("http://static2.mazhangjing.com/goods/20201016/8d3fbdc_Camera_2020-10-16_下午3.25.17.jpeg"),
+          /*val fakeg = Good("好看的茶杯",Some("http://static2.mazhangjing.com/goods/20201016/8d3fbdc_Camera_2020-10-16_下午3.25.17.jpeg"),
             Some("双伟送的好看的茶杯"),Some("日用品"),CurrentState.NotActive,
-          Importance.N,Some(LocalDateTime.now().plusDays(100)),Some(Duration.ofDays(100)))
-          Ok(views.html.details(Some(fakeg),auth = r.isLeft, id=goodId))
+            Importance.N,Some(LocalDateTime.now().plusDays(100)),Some(Duration.ofDays(100)))*/
+          Ok(views.html.details(Some(g),auth = r.isLeft, id=goodId))
       }
     }
   }

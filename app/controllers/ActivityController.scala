@@ -3,6 +3,7 @@ package controllers
 import java.time.LocalDateTime
 
 import javax.inject.{Inject, Singleton}
+import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Json
 import play.api.mvc._
 import services.{ActivityRepository, AuthController, AuthService, Website}
@@ -10,7 +11,9 @@ import services.{ActivityRepository, AuthController, AuthService, Website}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ActivityController @Inject()(cc: ControllerComponents, ar: ActivityRepository, val auth: AuthService)
+class ActivityController @Inject()(cc: ControllerComponents, ar: ActivityRepository,
+                                   val cache: AsyncCacheApi,
+                                   val auth: AuthService)
                                   (implicit val ec: ExecutionContext)
   extends AbstractController(cc) with AuthController {
 

@@ -1,6 +1,7 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
+import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Json
 import play.api.mvc._
 import services.{AuthController, AuthService, FitnessRepository}
@@ -8,7 +9,9 @@ import services.{AuthController, AuthService, FitnessRepository}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepository, val auth: AuthService)
+class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepository,
+                                  val cache: AsyncCacheApi,
+                                  val auth: AuthService)
                                  (implicit val ec: ExecutionContext)
   extends AbstractController(cc) with AuthController {
 
