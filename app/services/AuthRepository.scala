@@ -4,6 +4,7 @@ import java.util.Base64
 
 import play.api.libs.functional.syntax._
 import javax.inject.{Inject, Singleton}
+import org.slf4j.LoggerFactory
 import play.api.cache.AsyncCacheApi
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.http.HeaderNames
@@ -61,9 +62,12 @@ object AuthBasic {
 }
 
 @Singleton
-class AuthService @Inject()(protected val dbConfigProvider:DatabaseConfigProvider)
+class AuthService @Inject()(protected val dbConfigProvider:DatabaseConfigProvider,
+                           cache: AsyncCacheApi)
                            (implicit ec:ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   import AuthBasic._
   import profile.api._
@@ -90,10 +94,13 @@ class AuthService @Inject()(protected val dbConfigProvider:DatabaseConfigProvide
   }
 
   private val users = TableQuery[Users]
+  private val usersInsert = users returning users.map(_.id)
 
   def check(username:String, password:String): Future[Option[User]] = {
-    db.run(users.filter(i => i.username === username && i.password === password).result.headOption)
-  }
+    db.run{
+      logger.info(s"CHECKING DATABASE FOR $username and $password")
+      users.filter(i => i.username === username && i.password === password).result.headOption
+  }}
 
   def schema: String = users.schema.createStatements.mkString(" ")
 
@@ -106,7 +113,14 @@ class AuthService @Inject()(protected val dbConfigProvider:DatabaseConfigProvide
 
   def list: Future[Seq[User]] = db.run(users.result)
 
-  def delete(id:Long): Future[Int] = db.run(users.filter(_.id === id).delete)
+  def delete(id:Long): Future[Int] =
+    db.run(users.filter(_.id === id).result.headOption).flatMap {
+      case Some(value) =>
+        db.run(users.filter(_.id === id).delete).flatMap { res =>
+          cache.remove(s"user.${value.username}").map(_ => res)
+        }
+      case None => Future.successful(0)
+    }
 
 }
 
@@ -126,11 +140,19 @@ trait AuthController { self: AbstractController =>
         .withHeaders(WWW_AUTHENTICATE -> "Basic")))
       case Some(eit) => eit match {
         case Left(v) => Future(Right(v))
-        case Right((u,p)) => cache.getOrElseUpdate[Option[User]](s"user.$u") { auth.check(u,p) }.map {
-          case Some(user) if userType.contains(user.userType) => Left(user)
-          case None => Right(message("User token check failed."))
-          case _ => Right(message("User not authorized, may not in super higher group."))
-        }
+        //cache.getOrElseUpdate[Option[User]](s"user.$u") { auth.check(u,p) }
+        //不能对找不到的用户缓存无，万一新用户用这样的用户名注册，缓存没办法刷新，导致新账户无法登陆
+        case Right((u,p)) => cache.get[User](s"user.$u").flatMap {
+            case None => auth.check(u,p).flatMap {
+              case None => Future(None)
+              case Some(user) => cache.set(s"user.$u",user).map(_ => Some(user))
+            }
+            case Some(user) => Future(Some(user))
+          } map {
+            case Some(user) if userType.contains(user.userType) => Left(user)
+            case None => Right(message("User token check failed."))
+            case _ => Right(message("User not authorized, may not in super higher group."))
+          }
       }
     }
   }

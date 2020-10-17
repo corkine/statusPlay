@@ -78,7 +78,7 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
   def deleteFood(foodId:Long): Action[AnyContent] = Action.async { r =>
     authAdmin(r) flatMap {
       case Right(value) => Future(value)
-      case Left(_) => fr.deleteFood(foodId).map {
+      case Left(_) =>  fr.deleteFood(foodId).map {
         case Left(e) => Ok(Json.obj("message" -> e, "status" -> 0))
         case Right(in) => Ok(Json.obj("message" -> in, "status" -> 1))
       }
@@ -144,7 +144,7 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
         val file = Paths.get(p.filename.replace("，","_")
           .replace(" ","_")).toFile
         p.ref.moveTo(file)
-        val url = oss.upload(file)
+        val url = oss.upload(file,"foods")
         file.delete()
         if (url != null) Right(url) else Left("Upload Error.")
       }
@@ -226,7 +226,7 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
         val file = Paths.get(p.filename.replace("，","_")
           .replace(" ","_")).toFile
         p.ref.moveTo(file)
-        val url = oss.upload(file)
+        val url = oss.upload(file,"foods")
         file.delete()
         if (url != null) Right(url) else Left("Upload Error.")
       }
@@ -247,14 +247,13 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
    * @param foodId 不区分大小写的用户输入 ID
    */
   def foodDetail(foodId:Long): Action[AnyContent] = Action.async { r =>
-    authUsers(r) flatMap { r =>
-      fr.singleFood(foodId).map {
-        case Left(_) => Ok(views.html.foodDetails(None,auth = r.isLeft, id=foodId))
-        case Right(g) =>
-          /*val fakeg = Good("好看的茶杯",Some("http://static2.mazhangjing.com/goods/20201016/8d3fbdc_Camera_2020-10-16_下午3.25.17.jpeg"),
-            Some("双伟送的好看的茶杯"),Some("日用品"),CurrentState.NotActive,
-            Importance.N,Some(LocalDateTime.now().plusDays(100)),Some(Duration.ofDays(100)))*/
-          Ok(views.html.foodDetails(Some(g),auth = r.isLeft, id=foodId))
+    authUsers(r) flatMap { r => fr.singleFood(foodId).map {
+      case Left(_) => Ok(views.html.foodDetails(None,auth = r.isLeft, id=foodId))
+      case Right(g) =>
+        /*val fakeg = Good("好看的茶杯",Some("http://static2.mazhangjing.com/goods/20201016/8d3fbdc_Camera_2020-10-16_下午3.25.17.jpeg"),
+          Some("双伟送的好看的茶杯"),Some("日用品"),CurrentState.NotActive,
+          Importance.N,Some(LocalDateTime.now().plusDays(100)),Some(Duration.ofDays(100)))*/
+        Ok(views.html.foodDetails(Some(g),auth = r.isLeft, id=foodId))
       }
     }
   }
@@ -269,11 +268,11 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
       } else {
         val beforeDay = today match {
           case Some(true) => LocalDate.now().atStartOfDay()
-          case None => week match {
+          case _ => week match {
             case Some(true) => LocalDate.now().`with`(DayOfWeek.MONDAY).atStartOfDay()
-            case None => month match {
+            case _ => month match {
               case Some(true) => LocalDate.now().withDayOfMonth(1).atStartOfDay()
-              case None => day match {
+              case _ => day match {
                 case Some(d) => LocalDateTime.now().minusDays(d)
                 case _ => throw new RuntimeException("Can't happen.")
               }

@@ -30,10 +30,10 @@ class OSSUtils @Inject()(playConfig:Configuration) {
       config.getString("oss.accessKeyId"),
       config.getString("oss.accessKeySecret"))
 
-  def upload(file: File):String = {
+  def upload(file: File, folder:String):String = {
     val client = newClient
     val time = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-    val filePath = s"goods/$time/${UUID.randomUUID().toString.replace("-","").substring(0,7)}"
+    val filePath = s"$folder/$time/${UUID.randomUUID().toString.replace("-","").substring(0,7)}"
     val fileUrl = filePath + s"_${file.getName.replace(" ","")}"
 
     try {

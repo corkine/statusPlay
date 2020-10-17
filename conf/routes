@@ -1,22 +1,18 @@
 GET     /                                  controllers.Default.todo
-# [Public]
+
 GET     /status                            controllers.Default.redirect(to="/status/data")
 GET     /status/                           controllers.Default.redirect(to="/status/data")
 GET     /status/data                       controllers.ActivityController.all(lastDay:Option[Long])
-# [Admin]
 GET     /status/schema                     controllers.ActivityController.schema
 GET     /status/websiteAdd                 controllers.ActivityController.addWebsite(name:String,url:String,note:Option[String],priority:Option[Int])
 GET     /status/:websiteId/delete          controllers.ActivityController.deleteWebsite(websiteId:Long)
 GET     /status/:websiteId/update          controllers.ActivityController.updateWebsite(websiteId:Long,name:Option[String],url:Option[String],note:Option[String],priority:Option[Int])
-# [User]
 GET     /status/:websiteId/activities      controllers.ActivityController.checkActivities(websiteId:Long,skip:Option[Int],limit:Option[Int])
 
-# [User]
 POST    /fitness/iOSUpload              controllers.FitnessController.insert
 GET     /fitness                        controllers.Default.redirect(to="/fitness/data")
 GET     /fitness/                       controllers.Default.redirect(to="/fitness/data")
 GET     /fitness/data                   controllers.FitnessController.all(category:Option[String],lastDays:Option[Int],durationBiggerSeconds:Option[Long],skip:Option[Long],limit:Option[Long])
-# [Admin]
 GET     /fitness/schema                 controllers.FitnessController.schema
 
 GET     /goods/schema                   controllers.GoodsController.schema
@@ -35,10 +31,16 @@ GET     /foods/                         controllers.Default.redirect(to="/foods/
 GET     /foods/data                     controllers.FoodsController.foodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],skip:Option[Long],take:Option[Long])
 GET     /foods/search                   controllers.FoodsController.foods(like:String,recentDay:Option[Int])
 GET     /foods/details                  controllers.FoodsController.foodsDetail(today:Option[Boolean],week:Option[Boolean],month:Option[Boolean],day:Option[Int],kind:Option[String])
-GET     /foods/:foodId                  controllers.FoodsController.food(foodId)
-GET     /foods/:foodId/delete           controllers.FoodsController.deleteFood(foodId)
-GET     /foods/:foodId/details          controllers.FoodsController.foodDetail(foodId)
+GET     /foods/:foodId                  controllers.FoodsController.food(foodId:Long)
+GET     /foods/:foodId/delete           controllers.FoodsController.deleteFood(foodId:Long)
+GET     /foods/:foodId/details          controllers.FoodsController.foodDetail(foodId:Long)
 POST    /foods/add                      controllers.FoodsController.foodAdd
-POST    /foods/:foodId/update           controllers.FoodsController.foodEdit(foodId)
+POST    /foods/:foodId/update           controllers.FoodsController.foodEdit(foodId:Long)
+
+GET     /users                          controllers.Default.redirect(to="/users/data")
+GET     /users/                         controllers.Default.redirect(to="/users/data")
+GET     /users/data                     controllers.UserController.list
+GET     /users/add                      controllers.UserController.addUser(uName:String,uPassword:String,uRole:Option[String])
+GET     /users/:userId/delete           controllers.UserController.deleteUser(userId:Long)
 
 GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)

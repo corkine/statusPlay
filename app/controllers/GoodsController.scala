@@ -147,7 +147,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
           val file = Paths.get(p.filename.replace("，","_")
             .replace(" ","_")).toFile
           p.ref.moveTo(file)
-          val url = oss.upload(file)
+          val url = oss.upload(file,"goods")
           file.delete()
           if (url != null) Right(url) else Left("Upload Error.")
         }
@@ -235,7 +235,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
         val file = Paths.get(p.filename.replace("，","_")
           .replace(" ","_")).toFile
         p.ref.moveTo(file)
-        val url = oss.upload(file)
+        val url = oss.upload(file,"goods")
         file.delete()
         if (url != null) Right(url) else Left("Upload Error.")
       }
