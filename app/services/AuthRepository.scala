@@ -144,10 +144,10 @@ trait AuthController { self: AbstractController =>
         //不能对找不到的用户缓存无，万一新用户用这样的用户名注册，缓存没办法刷新，导致新账户无法登陆
         case Right((u,p)) => cache.get[User](s"user.$u").flatMap {
             case None => auth.check(u,p).flatMap {
-              case None => Future(None)
-              case Some(user) => cache.set(s"user.$u",user).map(_ => Some(user))
+              case None => Future(None) //缓存和系统均找不到
+              case Some(user) => cache.set(s"user.$u",user).map(_ => Some(user)) //缓存找不到，系统找到，写入缓存
             }
-            case Some(user) => Future(Some(user))
+            case Some(user) => Future(if (user.password == p) Some(user) else None) //缓存找到，对比密码
           } map {
             case Some(user) if userType.contains(user.userType) => Left(user)
             case None => Right(message("User token check failed."))

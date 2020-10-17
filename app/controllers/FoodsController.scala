@@ -280,7 +280,8 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
           }
         }
         fr.rangeFoods(kind,beforeDay) map { res =>
-          Ok(views.html.foodList(res, auth = r.isLeft))
+          if (r.isRight) message("Auth Failed.")
+          else Ok(views.html.foodList(res, auth = true))
         }
       }
     }

@@ -25,7 +25,7 @@
                         }
                         <div class="card-body">
                             <h5 class="card-title">@good.name
-                                <span style="vertical-align: top" class="badge badge-light">@good.kind</span>
+                                <span style="vertical-align: center" class="badge badge-light">@good.kind</span>
                             </h5>
                             <p class="card-text">@good.description</p>
                             <p class="card-text">
@@ -46,24 +46,19 @@
                         </div>
                     </div>
                 } else {
-                    <div class="alert alert-success" role="alert">
+                    <div class="alert alert-success mt-3" role="alert">
                         <h4 class="alert-heading">
                             ✔︎ <span style="vertical-align: top" class="badge badge-pill badge-light">#@good.id</span> Check Passed.</h4>
                         <p></p><hr>
                         <p class="mb-0">But you don't have more permissions, try to pass the authentication to continue.</p>
                     </div>
                 }
-                @*<div class="row">
-                <div class="col-sm-12 col-md-8 col-lg-6 col-xl-4">
-
-                </div>
-                </div>*@
             }
             </div>
         }else{
             <div class="alert alert-danger mt-3" role="alert">
                 <h4 class="alert-heading">
-                    ✘ Not Found <span style="vertical-align: top" class="badge badge-pill badge-warning">#EMPTY LIST</span></h4>
+                    ✘ NOTHING HERE! <span style="vertical-align: top" class="badge badge-pill badge-warning"># ???</span></h4>
                 <p></p><hr>
                 <p class="mb-0">This Query was not found in this system, please make sure it is spelled correctly.
                     Also, this may be a temporary error, please try again later.</p>
