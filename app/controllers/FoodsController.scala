@@ -262,8 +262,8 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
    * 显示内容详情：查询的 FOOD LIST
    */
   def foodsDetail(today:Option[Boolean],week:Option[Boolean],month:Option[Boolean],day:Option[Int],kind:Option[String]): Action[AnyContent] = Action.async { r =>
-    authAdmin(r) flatMap { r =>
-      if ((today orElse week orElse month orElse day).isEmpty) {
+    authAdmin(r) flatMap {
+      case Left(_) => if ((today orElse week orElse month orElse day).isEmpty) {
         Future(message("You need have param: today, week, month or day"))
       } else {
         val beforeDay = today match {
@@ -280,10 +280,10 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
           }
         }
         fr.rangeFoods(kind,beforeDay) map { res =>
-          if (r.isRight) message("Auth Failed.")
-          else Ok(views.html.foodList(res, auth = true))
+          Ok(views.html.foodList(res, auth = true))
         }
       }
+      case Right(value) => Future(value)
     }
   }
 
