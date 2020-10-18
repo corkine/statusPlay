@@ -95,6 +95,8 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * 参数：importance - 字符 ABCDEN，不区分大小写，非必须，缺失时设定为 N，不允许为空
    * 参数：validUntil - 字符串，ISO_DATE_TIME 格式，非必须，允许为空
    * 参数：estimatedLiftTime - 字符串，表示预计使用天数，非必须，允许为空
+   * 参数：message - 字符串，表示公开显示的信息，非必须，允许为空
+   * 参数：place - 字符串，表示此物品放置的位置，非必须，允许为空
    * 参数：picture - 图片文件，非必须，允许为空
    */
   def goodAdd: Action[AnyContent] = Action.async { r =>
@@ -142,6 +144,8 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
           Some(Duration.ofDays(s.head.toLong))
         } catch { case _: Throwable => None })
     val m_kind = map.get("kind").map(_.head)
+    val m_message = map.get("message").map(_.head)
+    val m_place = map.get("place").map(_.head)
     val m_picture = pic.map { p =>
         if (p.fileSize == 0) Left("File size 0 Error.") else {
           val file = Paths.get(p.filename.replace("，","_")
@@ -157,9 +161,9 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
       case (Left(e1),_) => Left(e1)
       case (Right(_),Some(Left(e2))) => Left(e2)
       case (Right(n),Some(Right(p))) => Right(Good(n,Some(p),m_desc,m_kind,currentState,importance,m_validUntil,
-          m_estimatedLiftTime, addTime, id = goodId))
+          m_estimatedLiftTime, m_message, m_place, addTime, id = goodId))
       case (Right(n),None) => Right(Good(n,None,m_desc,m_kind,currentState,importance,m_validUntil,
-          m_estimatedLiftTime, addTime, id = goodId))
+          m_estimatedLiftTime, m_message, m_place, addTime, id = goodId))
     }
   }
 
@@ -174,6 +178,8 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * 参数：importance - 字符 ABCDEN，不区分大小写，非必须，缺失时设定为 N，不允许为空
    * 参数：validUntil - 字符串，ISO_DATE 格式，非必须，允许为空
    * 参数：estimatedLiftTime - 字符串，表示预计使用天数，非必须，允许为空
+   * 参数：message - 字符串，表示公开显示的信息，非必须，允许为空
+   * 参数：place - 字符串，表示此物品放置的位置，非必须，允许为空
    * 参数：picture - 图片文件，非必须，允许为空
    * 参数：noPicDelete - 字符串，非必须，"1"表示没有上传 picture 图片时做删除更新，其他表示没有
    * 参数：newGoodId - 字符串，非必须，如果没有则不修改其 goodId 主键
@@ -230,6 +236,8 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
     val addTime = map.get("addTime").map(_.head)
       .map(LocalDateTime.parse(_,DateTimeFormatter.ISO_DATE_TIME))
       .getOrElse(goodOld.addTime)
+    val m_message = map.get("message").map(_.head).orElse(goodOld.message)
+    val m_place = map.get("place").map(_.head).orElse(goodOld.place)
     val m_picture = pic.map { p =>
       if (p.fileSize == 0) Left("File size 0 Error.") else {
         val file = Paths.get(p.filename.replace("，","_")
@@ -247,7 +255,8 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
     }
     m_picture map { p => goodOld.copy(name = name, description = m_desc, kind = m_kind,
       currentState = currentState, importance = importance, validUntil = m_validUntil,
-      estimatedLiftTime = m_estimatedLiftTime, addTime = addTime, updateTime = LocalDateTime.now(),
+      estimatedLiftTime = m_estimatedLiftTime, message = m_message, place = m_place,
+      addTime = addTime, updateTime = LocalDateTime.now(),
       picture = p, id = updatedId)
     }
   }
@@ -256,10 +265,11 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * 显示内容详情：三种情况：任何权限下均可以检查是否 GOODID 是否存在系统中，登录权限下可查看产品，没有 GOODID 对应则进行提示。
    * @param oGoodId 不区分大小写的用户输入 ID
    */
-  def goodDetail(oGoodId:String) = Action.async { r =>
+  def goodDetail(oGoodId:String): Action[AnyContent] = Action.async { r =>
     val goodId = oGoodId.toUpperCase()
     authUsers(r) flatMap { r =>
       gr.singleGood(goodId).map {
+        //case _ => Ok(views.html.details(None,auth = r.isLeft, id=goodId))
         case Left(_) => Ok(views.html.details(None,auth = r.isLeft, id=goodId))
         case Right(g) =>
           /*val fakeg = Good("好看的茶杯",Some("http://static2.mazhangjing.com/goods/20201016/8d3fbdc_Camera_2020-10-16_下午3.25.17.jpeg"),

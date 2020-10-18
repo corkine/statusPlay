@@ -17,6 +17,8 @@ case class Good(name:String,
                 importance: Importance = Importance.N,
                 validUntil: Option[LocalDateTime] = None,
                 estimatedLiftTime: Option[Duration] = None,
+                message: Option[String] = None,
+                place: Option[String] = None,
                 addTime:LocalDateTime = LocalDateTime.now(),
                 updateTime:LocalDateTime = LocalDateTime.now(),
                 id:String = Good.randomUpperGoodID)
@@ -26,10 +28,18 @@ object CurrentState {
   val Active: CurrentState = CurrentState("Active")
   val Ordinary: CurrentState = CurrentState("Ordinary")
   val NotActive: CurrentState = CurrentState("NotActive")
+  val Archive: CurrentState = CurrentState("Archive")
+  val Remove: CurrentState = CurrentState("Remove")
+  val Borrow: CurrentState = CurrentState("Borrow")
+  val Lost: CurrentState = CurrentState("Lost")
   def strUpper2CS(str:String):Option[CurrentState] = str.toUpperCase match {
     case a if a == "ACTIVE" => Some(Active)
     case b if b == "ORDINARY" => Some(Ordinary)
     case c if c == "NOTACTIVE" => Some(NotActive)
+    case d if d == "ARCHIVE" => Some(Archive)
+    case e if e == "REMOVE" => Some(Remove)
+    case f if f == "BORROW" => Some(Borrow)
+    case g if g == "LOST" => Some(Lost)
     case _ => None
   }
   implicit val stateF: Format[CurrentState] = new Format[CurrentState] {
@@ -84,6 +94,8 @@ object Good {
       (JsPath \ "importance").format[Importance] and
       (JsPath \ "validUntil").formatNullable[LocalDateTime] and
       (JsPath \ "estimatedLiftTime").formatNullable[Duration] and
+      (JsPath \ "message").formatNullable[String] and
+      (JsPath \ "place").formatNullable[String] and
       (JsPath \ "addTime").format[LocalDateTime] and
       (JsPath \ "updateTime").format[LocalDateTime] and
       (JsPath \ "id").format[String])(Good.apply, unlift(Good.unapply))
@@ -118,11 +130,13 @@ trait GoodsComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def importance = column[Importance]("importance")
     def validUntil = column[Option[LocalDateTime]]("validUntil")
     def estimatedLiftTime = column[Option[Duration]]("estimatedLiftTime")
+    def message = column[Option[String]]("message")
+    def place = column[Option[String]]("place")
     def addTime = column[LocalDateTime]("addTime")
     def updateTime = column[LocalDateTime]("updateTime")
     def id = column[String]("id",O.PrimaryKey)
     override def * =
-      (name,picture,description,kind,currentState,importance,validUntil, estimatedLiftTime,
+      (name,picture,description,kind,currentState,importance,validUntil, estimatedLiftTime, message, place,
         addTime,updateTime,id) <> ((Good.apply _).tupled, Good.unapply)
   }
 
@@ -155,12 +169,14 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
   def allGoods(lastDay:Option[Int],recentFirst:Boolean,skip:Long,take:Long): Future[Seq[Good]] =
     db.run(lastDay match {
       case None => goods
-        .sortBy(i => if (recentFirst) i.addTime.desc else i.addTime.asc)
+        .sortBy(i => if (recentFirst) (i.importance.asc,i.addTime.desc)
+                     else (i.importance.desc,i.addTime.asc))
         .drop(skip).take(take)
         .result
       case Some(day) => goods
         .filter(_.addTime >= LocalDateTime.now().minusDays(day))
-        .sortBy(i => if (recentFirst) i.addTime.desc else i.addTime.asc)
+        .sortBy(i => if (recentFirst) (i.importance.asc,i.addTime.desc)
+                     else (i.importance.desc,i.addTime.asc))
         .drop(skip).take(take)
         .result
     })

@@ -1,0 +1,45 @@
+### 添加 Goods
+POST http://localhost:9000/goods/add?user=corkine&password=mi960032
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="picture"; filename="sample.jpeg"
+Content-Type: image/jpeg
+
+< ./sample.jpeg
+--WebAppBoundary
+Content-Disposition: form-data; name="name"
+Content-Type: text/plain
+
+小米保温杯
+--WebAppBoundary
+Content-Disposition: form-data; name="description"
+Content-Type: text/plain
+
+白色
+--WebAppBoundary
+Content-Disposition: form-data; name="currentState"
+Content-Type: text/plain
+
+Borrow
+--WebAppBoundary
+Content-Disposition: form-data; name="importance"
+Content-Type: text/plain
+
+B
+--WebAppBoundary
+Content-Disposition: form-data; name="message"
+Content-Type: text/plain
+
+一世情归还
+--WebAppBoundary
+Content-Disposition: form-data; name="place"
+Content-Type: text/plain
+
+厨房
+--WebAppBoundary
+Content-Disposition: form-data; name="goodId"
+Content-Type: text/plain
+
+CMTEST2
+--WebAppBoundary--

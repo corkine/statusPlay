@@ -15,6 +15,7 @@ case class Food(name:String, picture:Option[String], description:Option[String],
                 evilDegree:Option[Int] = None,
                 hungerDegree:Option[Int] = None,
                 addTime:LocalDateTime = LocalDateTime.now(),
+                finishTime:Option[LocalDateTime] = None,
                 id:Long = 0L)
 
 object Food {
@@ -27,6 +28,7 @@ object Food {
       (JsPath \ "evilDegree").formatNullable[Int] and
       (JsPath \ "hungerDegree").formatNullable[Int] and
       (JsPath \ "addTime").format[LocalDateTime] and
+      (JsPath \ "finishTime").formatNullable[LocalDateTime] and
       (JsPath \ "id").format[Long])(Food.apply, unlift(Food.unapply))
 }
 
@@ -43,10 +45,11 @@ trait FoodsComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
     def evilDegree = column[Option[Int]]("evilDegree")
     def hungerDegree = column[Option[Int]]("hungerDegree")
     def addTime = column[LocalDateTime]("addTime")
+    def finishTime = column[Option[LocalDateTime]]("finishTime")
     def id = column[Long]("id",O.PrimaryKey,O.AutoInc)
     override def * =
       (name,picture,description,kind,buyEatIntervalDay,evilDegree,hungerDegree,
-        addTime,id) <> ((Food.apply _).tupled, Food.unapply)
+        addTime,finishTime,id) <> ((Food.apply _).tupled, Food.unapply)
   }
 
   lazy val foods = TableQuery[FoodTable]
@@ -74,8 +77,10 @@ class FoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   def rangeFoods(kind:Option[String],after:LocalDateTime): Future[Seq[Food]] = db.run {
     kind match {
-      case None => foods.filter(_.addTime >= after).result
-      case Some(k) => foods.filter(_.kind like k).filter(_.addTime >= after).result
+      case None => (foods.filter(_.addTime >= after) union
+        foods.filter(_.finishTime >= after)).result
+      case Some(k) => (foods.filter(_.addTime >= after) union
+        foods.filter(_.finishTime >= after)).filter(_.kind like k).result
     }
   }
 
@@ -83,8 +88,9 @@ class FoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
     foods.filter(_.id === foodId).result.headOption
   }.map(_.toRight(s"Can't find this foodId $foodId."))
 
-  def findFood(key:String, recentDay:Option[Int]): Future[Seq[Food]] = db.run {
-    recentDay match {
+  def findFood(oKey:String, addInRecentDay:Option[Int]): Future[Seq[Food]] = db.run {
+    val key = s"%$oKey%"
+    addInRecentDay match {
       case None => (foods.filter(_.name like key) union foods.filter(_.description like key)).result
       case Some(d) => (foods.filter(_.name like key) union foods.filter(_.description like key))
         .filter(_.addTime >= LocalDateTime.now().minusDays(d))

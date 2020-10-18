@@ -1,0 +1,50 @@
+### 添加 Goods
+POST http://localhost:9000/foods/add?user=corkine&password=mi960032
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="picture"; filename="sample.jpeg"
+Content-Type: image/jpeg
+
+< ./sample.jpeg
+--WebAppBoundary
+Content-Disposition: form-data; name="name"
+Content-Type: text/plain
+
+奶油蛋糕4
+--WebAppBoundary
+Content-Disposition: form-data; name="description"
+Content-Type: text/plain
+
+白色
+--WebAppBoundary
+Content-Disposition: form-data; name="kind"
+Content-Type: text/plain
+
+主食
+--WebAppBoundary
+Content-Disposition: form-data; name="buyEatIntervalDay"
+Content-Type: text/plain
+
+1
+--WebAppBoundary
+Content-Disposition: form-data; name="evilDegree"
+Content-Type: text/plain
+
+2
+--WebAppBoundary
+Content-Disposition: form-data; name="addTime"
+Content-Type: text/plain
+
+2020-10-15T11:50:56.801697
+--WebAppBoundary
+Content-Disposition: form-data; name="finishTime"
+Content-Type: text/plain
+
+2020-10-20T11:50:56.801697
+--WebAppBoundary
+Content-Disposition: form-data; name="hungerDegree"
+Content-Type: text/plain
+
+3
+--WebAppBoundary--

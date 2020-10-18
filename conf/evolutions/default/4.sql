@@ -3,7 +3,7 @@
 create table "foods" ("name" VARCHAR NOT NULL,
     "picture" VARCHAR,"description" VARCHAR,
     "kind" VARCHAR,"buyEatIntervalDay" INTEGER NOT NULL,"evilDegree" INTEGER,
-    "hungerDegree" INTEGER,"addTime" TIMESTAMP NOT NULL,
+    "hungerDegree" INTEGER,"addTime" TIMESTAMP NOT NULL, "finishTime" TIMESTAMP,
     "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT)
 
 

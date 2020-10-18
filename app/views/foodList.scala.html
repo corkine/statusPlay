@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@@4.5.0/dist/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <title>
     @if(auth) {
-        CMFOODS LIST
+        CMFOODS 实物清单列表
     } else {
         CMFOODS - NonAUTH
     }
@@ -29,18 +29,21 @@
                             </h5>
                             <p class="card-text">@good.description</p>
                             <p class="card-text">
-                                <span style="opacity: 0.7" class="badge badge-pill
+                                <span style="opacity: 0.7" title="饥饿度(五分评分)：@good.hungerDegree.getOrElse("?"), 邪恶度(五分评分)：@good.evilDegree.getOrElse("?")" class="badge badge-pill
                                           @{good.buyEatIntervalDay match {
                                     case i if i > 1 => "badge-success"
                                     case i if i == 1 => "badge-light"
                                     case i if i == 0 => "badge-warning"
                                 }}
-                                ">H@good.hungerDegree-E@good.evilDegree</span>
+                                ">H@good.hungerDegree.getOrElse("?")-E@good.evilDegree.getOrElse("?")</span>
                                 <span class="badge badge-pill badge-light">#@good.id</span>
-                                <small class="text-muted">
+                                <small class="text-muted" title="添加时间：@good.addTime, 食用完毕时间：@good.finishTime.map(_.toString).getOrElse("同添加时间")">
                                 @defining(java.time.format.DateTimeFormatter.ofPattern("YYYY/MM/dd HH:mm")) { formatter =>
                                     <svg style="margin-bottom: 4px" class="icon" width="1em" height="1em" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#707070" d="M778.666667 170.666667a32 32 0 0 1 32 32v362.666666a32 32 0 0 1-64 0v-362.666666a32 32 0 0 1 32-32zM170.666667 778.666667a32 32 0 0 1 32-32h362.666666a32 32 0 0 1 0 64h-362.666666a32 32 0 0 1-32-32zM353.28 308.053333a32 32 0 0 0-45.226667 45.226667l277.333334 277.333333a32 32 0 1 0 45.226666-45.226666l-277.333333-277.333334z" /></svg>
-                                    @{good.addTime.format(formatter)}
+                                    @{good.addTime.format(formatter)} &nbsp;
+                                    @if(good.finishTime.isDefined){
+                                        √ @{good.finishTime.get.format(formatter)}
+                                    }
                                 }
                                 </small></p>
                         </div>

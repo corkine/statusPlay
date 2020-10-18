@@ -30,10 +30,10 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
    * 查 - 搜索
    * @param like 查询 food Name Or Description 关键字
    */
-  def foods(like:String,recentDay:Option[Int]): Action[AnyContent] = Action.async { r =>
+  def foods(like:String, addInRecentDay:Option[Int]): Action[AnyContent] = Action.async { r =>
     authUsers(r) flatMap {
       case Right(value) => Future(value)
-      case Left(_) => fr.findFood(like,recentDay).map { res =>
+      case Left(_) => fr.findFood(like,addInRecentDay).map { res =>
         Ok(Json.obj("message" -> "done.", "status" -> (if (res.nonEmpty) 1 else 0), "foods" -> res))
       }
     }
@@ -89,6 +89,7 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
    * 增
    * 为 iOS 的捷径所设计，允许通过 POST multipartFormData or formUrlEncoded 来添加数据
    * 参数：addTime - 字符串，ISO_DATE_TIME 格式，非必须，缺失时设定为当前值，不允许为空
+   * 参数：finishTime - 吃完时间，ISO_DATE_TIME 格式，非必须，默认为空
    * 参数：name - 字符串，必须
    * 参数：description - 字符串，非必须，允许为空
    * 参数：kind - 字符串，非必须，允许为空
@@ -126,6 +127,12 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
       } catch {
         case _: Throwable => None
       }).getOrElse(LocalDateTime.now())
+    val m_finishTime = map.get("finishTime").map(_.head)
+      .flatMap(s => try {
+        Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE_TIME))
+      } catch {
+        case _: Throwable => None
+      })
     val e_name = map.get("name").map(_.head).toRight("Can't parse name.")
     val m_desc = map.get("description").map(_.head)
     val m_kind = map.get("kind").map(_.head)
@@ -154,9 +161,9 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
       case (Left(e1),_) => Left(e1)
       case (Right(_),Some(Left(e2))) => Left(e2)
       case (Right(n),Some(Right(p))) => Right(
-        Food(n,Some(p),m_desc,m_kind,buyEatIntervalDay,m_evilDegree,m_hungerDegree,addTime))
+        Food(n,Some(p),m_desc,m_kind,buyEatIntervalDay,m_evilDegree,m_hungerDegree,addTime,m_finishTime))
       case (Right(n),None) => Right(
-        Food(n,None,m_desc,m_kind,buyEatIntervalDay,m_evilDegree,m_hungerDegree,addTime))
+        Food(n,None,m_desc,m_kind,buyEatIntervalDay,m_evilDegree,m_hungerDegree,addTime,m_finishTime))
     }
   }
 
@@ -164,6 +171,7 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
    * 改
    * 为 iOS 的捷径所设计，允许通过 POST multipartFormData or formUrlEncoded 来修改数据
    * 参数：addTime - 字符串，ISO_DATE_TIME 格式，非必须，缺失时设定为当前值，不允许为空
+   * 参数：finishTime - 字符串，ISO_DATE_TIME 格式，非必须，可为空
    * 参数：name - 字符串，必须
    * 参数：description - 字符串，非必须，允许为空
    * 参数：kind - 字符串，非必须，允许为空
@@ -171,7 +179,6 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
    * 参数：evilDegree - 邪恶度，1-5，非必须，默认为空
    * 参数：hungerDegree - 饥饿度，1-5，非必须，默认为空
    * 参数：noPicDelete - 字符串，非必须，"1"表示没有上传 picture 图片时做删除更新，其他表示没有
-   * 参数：newGoodId - 字符串，非必须，如果没有则不修改其 goodId 主键
    * 上传 picture 图片时做不更新之前的 picture 字段（之前可能有或者无图片）
    */
   def foodEdit(foodId:Long): Action[AnyContent] = Action.async { r =>
@@ -219,8 +226,17 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
       case _ => false
     }
     val addTime = map.get("addTime").map(_.head)
-      .map(LocalDateTime.parse(_,DateTimeFormatter.ISO_DATE_TIME))
-      .getOrElse(foodOld.addTime)
+      .flatMap(s => try {
+        Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE_TIME))
+      } catch {
+        case _: Throwable => None
+      }).getOrElse(foodOld.addTime)
+    val m_finishTime = map.get("finishTime").map(_.head)
+      .flatMap(s => try {
+        Some(LocalDateTime.parse(s,DateTimeFormatter.ISO_DATE_TIME))
+      } catch {
+        case _: Throwable => None
+      }).orElse(foodOld.finishTime)
     val m_picture = pic.map { p =>
       if (p.fileSize == 0) Left("File size 0 Error.") else {
         val file = Paths.get(p.filename.replace("，","_")
@@ -238,7 +254,7 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
     }
     m_picture map { p => foodOld.copy(name = name, picture = p, description = m_desc, kind = m_kind,
       buyEatIntervalDay = buyEatIntervalDay,evilDegree = m_evilDegree, hungerDegree = m_hungerDegree,
-      addTime = addTime)
+      addTime = addTime, finishTime = m_finishTime)
     }
   }
 
