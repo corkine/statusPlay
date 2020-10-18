@@ -36,9 +36,9 @@
                                         <span style="opacity: 0.7" title="当前状态: @good.get.currentState.desc" class="badge badge-pill
                                               @{good.get.currentState.desc.toUpperCase match {
                                             case "ACTIVE" => "badge-success"
-                                            case "ORDINARY" => "badge-light"
+                                            case "NOTACTIVE" | "ORDINARY" => "badge-light"
                                             case "ARCHIVE" => "badge-dark"
-                                            case "NOTACTIVE" | "BORROW" => "badge-warning"
+                                            case "BORROW" => "badge-warning"
                                             case "REMOVE" | "LOST" => "badge-danger"
                                             case _ => "badge-light"
                                         }}
