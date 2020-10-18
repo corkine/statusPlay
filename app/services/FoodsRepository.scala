@@ -78,9 +78,11 @@ class FoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
   def rangeFoods(kind:Option[String],after:LocalDateTime): Future[Seq[Food]] = db.run {
     kind match {
       case None => (foods.filter(_.addTime >= after) union
-        foods.filter(_.finishTime >= after)).result
-      case Some(k) => (foods.filter(_.addTime >= after) union
-        foods.filter(_.finishTime >= after)).filter(_.kind like k).result
+        foods.filter(_.finishTime >= after)).sortBy(_.addTime.desc).result
+      case Some(k) =>
+        val ks = s"%$k%"
+        (foods.filter(_.addTime >= after) union
+        foods.filter(_.finishTime >= after)).filter(_.kind like ks).sortBy(_.addTime.desc).result
     }
   }
 
