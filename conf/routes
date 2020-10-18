@@ -30,7 +30,7 @@ GET     /foods                          controllers.Default.redirect(to="/foods/
 GET     /foods/                         controllers.Default.redirect(to="/foods/data")
 GET     /foods/data                     controllers.FoodsController.foodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],skip:Option[Long],take:Option[Long])
 GET     /foods/search                   controllers.FoodsController.foods(like:String,recentDay:Option[Int])
-GET     /foods/details                  controllers.FoodsController.foodsDetail(today:Option[Boolean]=Some(true),week:Option[Boolean],month:Option[Boolean],day:Option[Int],kind:Option[String])
+GET     /foods/details                  controllers.FoodsController.foodsDetail(today:Option[Boolean],week:Option[Boolean],month:Option[Boolean],day:Option[Int],kind:Option[String])
 GET     /foods/:foodId                  controllers.FoodsController.food(foodId:Long)
 GET     /foods/:foodId/delete           controllers.FoodsController.deleteFood(foodId:Long)
 GET     /foods/:foodId/details          controllers.FoodsController.foodDetail(foodId:Long)

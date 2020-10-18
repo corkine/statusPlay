@@ -284,7 +284,8 @@ class FoodsController @Inject()(cc: ControllerComponents, fr: FoodsRepository,
       } else {
         val beforeDay = today match {
           case Some(true) => LocalDate.now().atStartOfDay()
-          case _ => week match {
+          case _ =>
+            week match {
             case Some(true) => LocalDate.now().`with`(DayOfWeek.MONDAY).atStartOfDay()
             case _ => month match {
               case Some(true) => LocalDate.now().withDayOfMonth(1).atStartOfDay()
