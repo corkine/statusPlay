@@ -33,6 +33,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    */
   def goods(like:Option[String],skip:Option[Int],limit:Option[Int]): Action[AnyContent] = Action.async { r =>
     ???
+    Future(Ok("233").withSession("user" -> "Marvin","type" -> "Admin"))
   }
 
   /**

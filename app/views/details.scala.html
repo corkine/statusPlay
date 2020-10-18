@@ -24,12 +24,14 @@
                     @if(good.nonEmpty) {
                         @if(auth) {
                             <div class="card mb-3">
-                                <img src="@good.get.picture.getOrElse(".")" class="card-img-top" alt="...">
+                                @if(good.get.picture.nonEmpty){
+                                    <img src="@good.get.picture.get" class="card-img-top" alt="...">
+                                }
                                 <div class="card-body">
                                     <h5 class="card-title">@good.get.name
                                         <span style="vertical-align: top" class="badge badge-secondary">#@good.get.id</span>
                                     </h5>
-                                    <p class="card-text">@good.get.description <span class="text-muted">@@@good.get.place</span></p>
+                                    <p class="card-text">@good.get.description <span class="text-muted">@good.get.place.map("@" + _)</span></p>
                                     <p class="card-text">
                                         <span style="opacity: 0.7" title="当前状态: @good.get.currentState.desc" class="badge badge-pill
                                               @{good.get.currentState.desc.toUpperCase match {
