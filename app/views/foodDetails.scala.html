@@ -33,20 +33,48 @@
                         </h5>
                         <p class="card-text">@good.get.description</p>
                         <p class="card-text">
-                            <span style="opacity: 0.7" title="饥饿度(五分评分)：@good.get.hungerDegree.getOrElse("?"), 邪恶度(五分评分)：@good.get.evilDegree.getOrElse("?")" class="badge badge-pill
-                                              @{good.get.buyEatIntervalDay match {
+                            <span style="opacity: 0.7" title="饥饿度(五分评分)：@good.get.hungerDegree.getOrElse("?")" class="badge badge-pill
+                                          @{good.get.hungerDegree map {
+                                case 0 => "badge-danger"
+                                case 1 => "badge-warning"
+                                case 2 | 3 => "badge-light"
+                                case 5 | 4 => "badge-success"
+                            }}
+                            ">饥饿 @good.get.hungerDegree.getOrElse("?")</span>
+                            <span style="opacity: 0.7" title="邪恶度(五分评分)：@good.get.evilDegree.getOrElse("?")" class="badge badge-pill
+                                          @{good.get.evilDegree map {
+                                case 5 => "badge-danger"
+                                case 4 => "badge-warning"
+                                case 2 | 3 | 4 => "badge-light"
+                                case 1 => "badge-success"
+                            }}
+                            ">能量 @good.get.evilDegree.getOrElse("?")</span>
+                            <span style="opacity: 0.7" title="" class="badge badge-pill
+                                          @{good.get.buyEatIntervalDay match {
                                 case i if i > 1 => "badge-success"
                                 case i if i == 1 => "badge-light"
                                 case i if i == 0 => "badge-warning"
                             }}
-                            ">H@good.get.hungerDegree.getOrElse("?")-E@good.get.evilDegree.getOrElse("?")</span>
+                            ">@{good.get.buyEatIntervalDay match {
+                                case i if i == 0 => "当日"
+                                case i if i == 1 => "次日"
+                                case i if i == 2 => "前日"
+                                case i if i < 5 => "5天内"
+                                case i if i < 30 => "30天内"
+                                case t => t + "天"
+                            }}购买</span>
                             <span class="badge badge-pill badge-light">#@good.get.id</span>
+                            <br/>
                             <small class="text-muted" title="添加时间：@good.get.addTime, 食用完毕时间：@good.get.finishTime.map(_.toString).getOrElse("同添加时间")">
                             @defining(java.time.format.DateTimeFormatter.ofPattern("YYYY/MM/dd HH:mm")) { formatter =>
                                 <svg style="margin-bottom: 4px" class="icon" width="1em" height="1em" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#707070" d="M778.666667 170.666667a32 32 0 0 1 32 32v362.666666a32 32 0 0 1-64 0v-362.666666a32 32 0 0 1 32-32zM170.666667 778.666667a32 32 0 0 1 32-32h362.666666a32 32 0 0 1 0 64h-362.666666a32 32 0 0 1-32-32zM353.28 308.053333a32 32 0 0 0-45.226667 45.226667l277.333334 277.333333a32 32 0 1 0 45.226666-45.226666l-277.333333-277.333334z" /></svg>
                                 @{good.get.addTime.format(formatter)} &nbsp;
-                                @if(good.get.finishTime.isDefined){
+                            @if(good.get.finishTime.isDefined){
+                                @if(good.get.finishTime.get.getYear >= 2096) {
+                                    尚余
+                                }else{
                                     √ @{good.get.finishTime.get.format(formatter)}
+                                }
                                 }
                             }
                             </small></p>

@@ -63,7 +63,9 @@
                               ✔︎ <span style="vertical-align: top" class="badge badge-pill badge-light">#@good.get.id</span> Check Passed.</h4>
                               <p></p><hr>
                               <p class="mb-0">But you don't have more permissions, try to pass the authentication to continue.</p>
-                              <p class="text-muted alert alert-warning mt-3 mb-2">@good.get.message</p>
+                              @if(good.get.message.nonEmpty){
+                                  <p class="text-muted alert alert-warning mt-3 mb-2">@good.get.message</p>
+                              }
                             </div>
                         }
                     } else {
