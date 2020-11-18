@@ -8,12 +8,12 @@
         <title>
         @if(good.nonEmpty) {
             @if(auth) {
-                @{s"CMGOOD: ${good.get.name}#${good.get.id}"}
+                @{s"[CMGOOD] ${good.get.name}#${good.get.id}"}
             } else {
-                @{s"CMGOOD: #${good.get.id}"}
+                @{s"[CMGOOD] #${good.get.id}"}
             }
         } else {
-            CMGOOD: ✕@id
+            [CMGOOD] ✕@id
         }
         </title>
     </head>
@@ -34,6 +34,21 @@
                                     <p class="card-text">@good.get.description <span class="text-muted">@good.get.place.map("@" + _)</span></p>
                                     <p class="card-text">
                                         <span style="opacity: 0.7" title="当前状态: @good.get.currentState.desc" class="badge badge-pill
+                                            @{good.get.importance.desc.toUpperCase match {
+                                                case "A" => "badge-info"
+                                                case "B" => "badge-info"
+                                                case "C" => "badge-success"
+                                                case "D" => "badge-success"
+                                                case _ => "badge-light"
+                                            }}
+                                        ">@{good.get.importance.desc.toUpperCase match {
+                                            case "A" => "重要"
+                                            case "B" => "比较重要"
+                                            case "C" => "常用"
+                                            case "D" => "不太常用"
+                                            case _ => "一般"
+                                        }}</span>
+                                        <span style="opacity: 0.7" title="当前状态: @good.get.currentState.desc" class="badge badge-pill
                                               @{good.get.currentState.desc.toUpperCase match {
                                             case "ACTIVE" => "badge-success"
                                             case "NOTACTIVE" | "ORDINARY" => "badge-light"
@@ -42,7 +57,14 @@
                                             case "REMOVE" | "LOST" => "badge-danger"
                                             case _ => "badge-light"
                                         }}
-                                        ">@good.get.importance.desc</span>
+                                        ">@{good.get.currentState.desc.toUpperCase match {
+                                            case "ACTIVE" => "活跃"
+                                            case "NOTACTIVE" | "ORDINARY" => "一般"
+                                            case "ARCHIVE" => "收纳"
+                                            case "BORROW" => "外借"
+                                            case "REMOVE" | "LOST" => "移除"
+                                            case _ => "未知"
+                                        }}</span>
                                         <span class="badge badge-pill badge-light">@good.get.kind</span>
                                         <small class="text-muted" title="当前状态：@good.get.currentState.desc">
                                             @defining(java.time.format.DateTimeFormatter.ofPattern("YYYY/MM/dd HH:mm")) { formatter =>
