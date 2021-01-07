@@ -166,31 +166,51 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
   extends HasDatabaseConfigProvider[JdbcProfile] with GoodsComponent {
   import profile.api._
 
-  def allGoods(lastDay:Option[Int],recentFirst:Boolean, hideRemove:Boolean, skip:Long,take:Long): Future[Seq[Good]] =
+  def allGoods(lastDay:Option[Int],recentFirst:Boolean, hideRemove:Boolean, shortByName:Boolean, skip:Long,take:Long): Future[Seq[Good]] =
     db.run(lastDay match {
       case None => if (hideRemove) { goods
             .filter(_.currentState =!= CurrentState.Remove)
-            .sortBy(i => if (recentFirst) (i.importance.asc,i.addTime.desc)
-            else (i.importance.desc,i.addTime.asc))
+            .sortBy(i => if (recentFirst) {
+                if (shortByName) (i.importance.asc, i.name.desc)
+                else (i.importance.asc, i.addTime.desc)
+              } else {
+                if (shortByName) (i.importance.desc, i.name.desc)
+                else (i.importance.desc, i.addTime.asc)
+              })
             .drop(skip).take(take)
             .result
         } else { goods
-            .sortBy(i => if (recentFirst) (i.importance.asc,i.addTime.desc)
-            else (i.importance.desc,i.addTime.asc))
+            .sortBy(i => if (recentFirst) {
+                if (shortByName) (i.importance.asc, i.name.desc)
+                else (i.importance.asc, i.addTime.desc)
+              } else {
+                if (shortByName) (i.importance.desc, i.name.desc)
+                else (i.importance.desc, i.addTime.asc)
+              })
             .drop(skip).take(take)
             .result
         }
       case Some(day) => if (hideRemove) { goods
             .filter(_.currentState =!= CurrentState.Remove)
             .filter(_.addTime >= LocalDateTime.now().minusDays(day))
-            .sortBy(i => if (recentFirst) (i.importance.asc,i.addTime.desc)
-            else (i.importance.desc,i.addTime.asc))
+            .sortBy(i => if (recentFirst) {
+                if (shortByName) (i.importance.asc, i.name.desc)
+                else (i.importance.asc, i.addTime.desc)
+              } else {
+                if (shortByName) (i.importance.desc, i.name.desc)
+                else (i.importance.desc, i.addTime.asc)
+              })
             .drop(skip).take(take)
             .result
         } else { goods
             .filter(_.addTime >= LocalDateTime.now().minusDays(day))
-            .sortBy(i => if (recentFirst) (i.importance.asc,i.addTime.desc)
-            else (i.importance.desc,i.addTime.asc))
+            .sortBy(i => if (recentFirst) {
+                if (shortByName) (i.importance.asc, i.name.desc)
+                else (i.importance.asc, i.addTime.desc)
+              } else {
+                if (shortByName) (i.importance.desc, i.name.desc)
+                else (i.importance.desc, i.addTime.asc)
+              })
             .drop(skip).take(take)
             .result
         }

@@ -18,7 +18,7 @@ GET     /fitness/schema                 controllers.FitnessController.schema
 GET     /goods/schema                   controllers.GoodsController.schema
 GET     /goods                          controllers.Default.redirect(to="/goods/data")
 GET     /goods/                         controllers.Default.redirect(to="/goods/data")
-GET     /goods/data                     controllers.GoodsController.goodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],hideRemove:Option[Boolean],skip:Option[Long],take:Option[Long])
+GET     /goods/data                     controllers.GoodsController.goodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],hideRemove:Option[Boolean],shortByName:Option[Boolean],skip:Option[Long],take:Option[Long])
 GET     /goods/:goodId                  controllers.GoodsController.good(goodId)
 GET     /goods/:goodId/delete           controllers.GoodsController.deleteGood(goodId)
 GET     /goods/:goodId/details          controllers.GoodsController.goodDetail(goodId)
