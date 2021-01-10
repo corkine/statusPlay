@@ -37,6 +37,17 @@ GET     /foods/:foodId/details          controllers.FoodsController.foodDetail(f
 POST    /foods/add                      controllers.FoodsController.foodAdd
 POST    /foods/:foodId/update           controllers.FoodsController.foodEdit(foodId:Long)
 
+GET     /address/schema                 controllers.AddressController.schema
+GET     /address                        controllers.Default.redirect(to="/address/data")
+GET     /address/                       controllers.Default.redirect(to="/address/data")
+GET     /address/data                   controllers.AddressController.all(lastDays:Option[Int],recentFirst:Option[Boolean],skip:Option[Long],limit:Option[Long])
+GET     /address/searchhost             controllers.AddressController.searchHost(hostName:String,take:Option[Long],fullMatch:Option[Boolean],days:Option[Long])
+GET     /address/searchip               controllers.AddressController.searchIP(ip:String,days:Option[Long])
+GET     /address/deletehost             controllers.AddressController.deleteHost(hostName:String)
+GET     /address/add                    controllers.AddressController.add(hostName:String, ip:String, description:Option[String])
+POST    /address/add                    controllers.AddressController.addPost()
+GET     /address/:hostName              controllers.AddressController.one(hostName:String)
+
 GET     /users                          controllers.Default.redirect(to="/users/data")
 GET     /users/                         controllers.Default.redirect(to="/users/data")
 GET     /users/data                     controllers.UserController.list

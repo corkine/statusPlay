@@ -1,0 +1,23 @@
+### POST Add
+POST http://localhost:9000/address/add?user=corkine&password=mi960032
+Content-Type: application/x-www-form-urlencoded
+
+hostName=CMNTE&ip=192.168.0.103
+
+### GET Add
+GET http://localhost:9000/address/add?user=corkine&password=mi960032&hostName=CMNTE2&ip=192.168.0.104
+
+### DELETE ONE
+GET http://localhost:9000/address/deletehost?user=corkine&password=mi960032&hostName=CMNTE
+
+### FIND ONE FULL MATCH
+GET http://localhost:9000/address/searchhost?user=corkine&password=mi960032&hostName=CMNTE2
+
+### FIND ONE
+GET http://localhost:9000/address/searchhost?user=corkine&password=mi960032&hostName=CMNTE&fullMatch=false
+
+### JUST LAST
+GET http://localhost:9000/address/CMNTE?user=corkine&password=mi960032
+
+### SEARCH IP
+GET http://localhost:9000/address/searchip?user=corkine&password=mi960032&ip=192.168.0.104
