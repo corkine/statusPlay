@@ -58,11 +58,11 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
    * @param skip 跳过 - 用于分页
    * @param take 限制 - 用于分页
    */
-  def goodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],hideRemove:Option[Boolean],shortByName:Option[Boolean],skip:Option[Long],take:Option[Long]): Action[AnyContent] = Action.async { r =>
+  def goodsAll(lastDay:Option[Int],recentFirst:Option[Boolean],hideRemove:Option[Boolean],hideClothes:Option[Boolean],shortByName:Option[Boolean],skip:Option[Long],take:Option[Long]): Action[AnyContent] = Action.async { r =>
     authAdmin(r) flatMap {
       case Right(v) => Future(v)
       case Left(_) =>
-        gr.allGoods(lastDay, recentFirst.getOrElse(true), hideRemove.getOrElse(false), shortByName.getOrElse(true), skip.getOrElse(0), take.getOrElse(1000)) map { res =>
+        gr.allGoods(lastDay, recentFirst.getOrElse(true), hideRemove.getOrElse(false), hideClothes.getOrElse(false),shortByName.getOrElse(true), skip.getOrElse(0), take.getOrElse(1000)) map { res =>
           Ok(Json.toJson(res))
         }
     }

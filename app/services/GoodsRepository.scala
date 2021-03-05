@@ -166,10 +166,12 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
   extends HasDatabaseConfigProvider[JdbcProfile] with GoodsComponent {
   import profile.api._
 
-  def allGoods(lastDay:Option[Int],recentFirst:Boolean, hideRemove:Boolean, shortByName:Boolean, skip:Long,take:Long): Future[Seq[Good]] =
+  def allGoods(lastDay:Option[Int],recentFirst:Boolean, hideRemove:Boolean, hideClothes:Boolean,
+               shortByName:Boolean, skip:Long,take:Long): Future[Seq[Good]] =
     db.run(lastDay match {
-      case None => if (hideRemove) { goods
-            .filter(_.currentState =!= CurrentState.Remove)
+      case None => goods
+            .filterIf(hideRemove)(_.currentState =!= CurrentState.Remove)
+            .filterIf(hideClothes)(!_.id.toUpperCase.startsWith("CMCU"))
             .sortBy(i => if (recentFirst) {
                 if (shortByName) (i.importance.asc, i.name.desc)
                 else (i.importance.asc, i.addTime.desc)
@@ -179,19 +181,9 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
               })
             .drop(skip).take(take)
             .result
-        } else { goods
-            .sortBy(i => if (recentFirst) {
-                if (shortByName) (i.importance.asc, i.name.desc)
-                else (i.importance.asc, i.addTime.desc)
-              } else {
-                if (shortByName) (i.importance.desc, i.name.desc)
-                else (i.importance.desc, i.addTime.asc)
-              })
-            .drop(skip).take(take)
-            .result
-        }
-      case Some(day) => if (hideRemove) { goods
-            .filter(_.currentState =!= CurrentState.Remove)
+      case Some(day) => goods
+            .filterIf(hideRemove)(_.currentState =!= CurrentState.Remove)
+            .filterIf(hideClothes)(!_.id.toUpperCase.startsWith("CMCU"))
             .filter(_.addTime >= LocalDateTime.now().minusDays(day))
             .sortBy(i => if (recentFirst) {
                 if (shortByName) (i.importance.asc, i.name.desc)
@@ -202,18 +194,6 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
               })
             .drop(skip).take(take)
             .result
-        } else { goods
-            .filter(_.addTime >= LocalDateTime.now().minusDays(day))
-            .sortBy(i => if (recentFirst) {
-                if (shortByName) (i.importance.asc, i.name.desc)
-                else (i.importance.asc, i.addTime.desc)
-              } else {
-                if (shortByName) (i.importance.desc, i.name.desc)
-                else (i.importance.desc, i.addTime.asc)
-              })
-            .drop(skip).take(take)
-            .result
-        }
     })
 
   def singleGood(goodId:String): Future[Either[String,Good]] = db.run {
