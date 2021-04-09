@@ -24,7 +24,7 @@ Play 后端使用 RESTful API 提供服务，前端使用 URL 进行简单交互
 
 ### iOS 快捷方式提供的快捷视图
 
-基于 Play 的 RESTful API，通过 iOS 的 "快捷方式" APP 编写了常用的对于个人健康记录的上传（苹果健康）、个人物品管理的增、删、改、查（带照片记录）、每日餐饮的快速拍照记录等服务。因为此 APP 需要硬编码用户名和密码，因此不做分享，详情请联系 concat@mazhanjging.com。
+基于 Play 的 RESTful API，通过 iOS 的 "快捷方式" APP 编写了常用的对于个人健康记录的上传（苹果健康）、个人物品管理的增、删、改、查（带照片记录）、每日餐饮的快速拍照记录等服务。因为此 APP 需要硬编码用户名和密码，因此不做分享，详情请联系 git@mazhangjing.com。
 
 ![](http://static2.mazhangjing.com/20210409/e274cb1_截屏2021-04-09上午10.19.47.png)
 

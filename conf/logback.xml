@@ -34,14 +34,14 @@
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
 
   <!--=========== DATABASE ===========-->
-  <!--SQL Send to DB-->
-<!--  <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG" />-->
-<!--  &lt;!&ndash;Set Param to Query&ndash;&gt;-->
-<!--  <logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG" />-->
-<!--  &lt;!&ndash;The First Few Results of Query&ndash;&gt;-->
-<!--  <logger name="slick.jdbc.StatementInvoker.result" level="DEBUG" />-->
-<!--  &lt;!&ndash;Session events such as open/close connections&ndash;&gt;-->
-<!--  <logger name="slick.session" level="DEBUG" />-->
+<!--  &lt;!&ndash;SQL Send to DB&ndash;&gt;
+  <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG" />
+  &lt;!&ndash;Set Param to Query&ndash;&gt;
+  <logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG" />
+  &lt;!&ndash;The First Few Results of Query&ndash;&gt;
+  <logger name="slick.jdbc.StatementInvoker.result" level="DEBUG" />
+  &lt;!&ndash;Session events such as open/close connections&ndash;&gt;
+  <logger name="slick.session" level="DEBUG" />-->
   <!--All Slick-->
   <logger name="slick" level="INFO" />
   <!--=========== DATABASE ===========-->

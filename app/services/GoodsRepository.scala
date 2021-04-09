@@ -29,9 +29,9 @@ object CurrentState {
   val Ordinary: CurrentState = CurrentState("Ordinary")
   val NotActive: CurrentState = CurrentState("NotActive")
   val Archive: CurrentState = CurrentState("Archive")
-  val Remove: CurrentState = CurrentState("Remove")
   val Borrow: CurrentState = CurrentState("Borrow")
   val Lost: CurrentState = CurrentState("Lost")
+  val Remove: CurrentState = CurrentState("Remove")
   def strUpper2CS(str:String):Option[CurrentState] = str.toUpperCase match {
     case a if a == "ACTIVE" => Some(Active)
     case b if b == "ORDINARY" => Some(Ordinary)
@@ -115,7 +115,7 @@ trait GoodsComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
 
   implicit val csType: BaseColumnType[CurrentState] =
-    MappedColumnType.base[CurrentState,String](_.desc,CurrentState(_))
+    MappedColumnType.base[CurrentState,String](_.desc,CurrentState.strUpper2CS(_).get)
   implicit val imType: BaseColumnType[Importance] =
     MappedColumnType.base[Importance,String](_.desc,Importance(_))
   implicit val durationType: BaseColumnType[Duration] =
@@ -165,6 +165,17 @@ class GoodsRepository @Inject() (protected val dbConfigProvider: DatabaseConfigP
                                    (implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with GoodsComponent {
   import profile.api._
+
+  def viewGoods(switchToClothes:Boolean,hideRemove:Boolean,shortByImportance:Boolean,shortByState:Boolean,skip:Long,take:Long): Future[Seq[Good]] = db.run {
+    goods.filterIf(switchToClothes)(_.id.toUpperCase.startsWith("CMCU"))
+      .filterIf(!switchToClothes)(i => !i.id.toUpperCase.startsWith("CMCU"))
+      .filterIf(hideRemove)(_.currentState =!= CurrentState.Remove)
+      .sortBy(i => (shortByImportance, shortByState) match {
+        case (true,false) => i.importance.asc -> i.addTime.desc
+        case (false,true) => i.currentState.asc -> i.addTime.desc
+        case _ => i.importance.asc -> i.currentState.asc
+      }).drop(skip).take(take).result
+  }
 
   def allGoods(lastDay:Option[Int],recentFirst:Boolean, hideRemove:Boolean, hideClothes:Boolean,
                shortByName:Boolean, skip:Long,take:Long): Future[Seq[Good]] =

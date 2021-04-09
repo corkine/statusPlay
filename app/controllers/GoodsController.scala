@@ -52,7 +52,7 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
   }
 
   /**
-   * 查 - 全部
+   * 查 - 全部 - JSON
    * @param lastDay 最近几天添加的数据
    * @param recentFirst 优先显示最近添加的
    * @param skip 跳过 - 用于分页
@@ -62,9 +62,25 @@ class GoodsController @Inject()(cc: ControllerComponents, gr: GoodsRepository,
     authAdmin(r) flatMap {
       case Right(v) => Future(v)
       case Left(_) =>
-        gr.allGoods(lastDay, recentFirst.getOrElse(true), hideRemove.getOrElse(false), hideClothes.getOrElse(false),shortByName.getOrElse(true), skip.getOrElse(0), take.getOrElse(1000)) map { res =>
+        gr.allGoods(lastDay, recentFirst.getOrElse(true), hideRemove.getOrElse(false),
+          hideClothes.getOrElse(false),shortByName.getOrElse(true), skip.getOrElse(0), take.getOrElse(1000)) map { res =>
           Ok(Json.toJson(res))
         }
+    }
+  }
+
+  /**
+   * 查 - 全部 - GUI
+   * @param skip 跳过 - 用于分页
+   * @param take 限制 - 用于分页
+   */
+  def goodsList(clothes:Option[Boolean],hideRemove:Option[Boolean],
+                shortByImportance:Option[Boolean],shortByState:Option[Boolean],
+                skip:Option[Long],take:Option[Long]): Action[AnyContent] = Action.async { _ =>
+    gr.viewGoods(clothes.getOrElse(false),hideRemove.getOrElse(true),
+      shortByImportance.getOrElse(true),shortByState.getOrElse(true),
+      skip.getOrElse(0),take.getOrElse(1000)).map { res =>
+      Ok(views.html.goodsList(res))
     }
   }
 
