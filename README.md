@@ -14,7 +14,7 @@
 
 ### 基本的 HTML 视图
 
-Play 后端使用 RESTful API 提供服务，前端使用 URL 进行简单交互，比如 mazhangjing.com/status 会自动跳转到 https://status.mazhangjing.com/status，通过 Basic 认证后，提供当前网站运行概要信息。
+Play 后端使用 RESTful API 提供服务，前端使用 URL 进行简单交互，比如 mazhangjing.com/status 会自动跳转到 https://status.mazhangjing.com/status。 通过 Basic 认证后，提供当前网站运行概要信息。
 
 此外，对于个人健康、个人物品管理和餐饮管理，暴露了简单的使用 Bootstrap 搭建的列表和详情页面，比如 mazhangjing.com/CMNTE 会自动跳转到 https://status.mazhangjing.com/goods/CMNTE/details 界面，通过认证后会显示 CMNTE 条目详细信息，否则显示简略信息。https://status.mazhangjing.com/foods/details?week=true 可以返回最近一周的饮食情况分析等。
 
