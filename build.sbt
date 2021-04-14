@@ -1,6 +1,6 @@
 name := "statusPlay"
  
-version := "2.10.10"
+version := "2.10.11"
       
 lazy val `statusplay` = (project in file(".")).enablePlugins(PlayScala)
 
@@ -10,7 +10,7 @@ resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/"
       
 scalaVersion := "2.12.2"
 
-libraryDependencies ++= Seq(ehcache , ws , specs2 % Test , guice )
+libraryDependencies ++= Seq(caffeine , ws , specs2 % Test , guice )
 
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "5.0.0",
