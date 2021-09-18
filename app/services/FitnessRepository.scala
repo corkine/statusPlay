@@ -131,7 +131,7 @@ object Data {
       dataFor(Steps) ++ dataFor(VO2Max) ++ dataFor(WalkingRunningDistance) ++
         dataFor(FlightsClimbed) ++ dataFor(ActiveCalories) ++ dataFor(RestingCalories) ++
         dataFor(HeartRate) ++ dataFor(RestingHeartRate) ++ dataFor(WalkingHeartRateAverage) ++
-        dataFor(HeartRateVariability) //++ dataFor(Weight)
+        dataFor(HeartRateVariability) ++ dataFor(Breath) //++ dataFor(Weight)
     val res = if (skipZeroValueData) data.filter(_.value != 0) else data
     logger.info(s"Prepare ${res.length} data done."); res
   }
