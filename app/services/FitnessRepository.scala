@@ -24,7 +24,8 @@ object HeartRate extends Category //心跳
 object RestingHeartRate extends Category //静息心跳
 object WalkingHeartRateAverage extends Category //步行平均心跳
 object HeartRateVariability extends Category //心率变异性
-object Weight extends Category
+object Weight extends Category //体重
+object Breath extends Category //正念呼吸
 object Category {
   implicit val categoryFormatter: Format[Category] = new Format[Category] {
     override def reads(json: JsValue): JsResult[Category] = str2Cats(json.as[String]) match {
@@ -53,6 +54,7 @@ object Category {
     case "WALKINGHEARTRATEAVERAGE" => WalkingHeartRateAverage
     case "HEARTRATEVARIABILITY" => HeartRateVariability
     case "WEIGHT" => Weight
+    case "BREATH" => Breath
     case _ => null
   }
 }
@@ -86,6 +88,7 @@ object Data {
       case WalkingHeartRateAverage => "walkheart"
       case HeartRateVariability => "heartvariability"
       case Weight => "weight"
+      case Breath => "breath"
     }
     val VALUE = "value"
     val UNIT = "unit"
