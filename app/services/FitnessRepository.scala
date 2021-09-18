@@ -115,7 +115,12 @@ object Data {
         val endData = (in \ simpleField(clazz) \ END).validate[String].get.split("\n")
         val durationData = (in \ simpleField(clazz) \ DURATION).validate[String].get.split("\n")
         vData.indices.map { i =>
-          val values = vData(i).toDouble
+          var values = 0.0
+          try {
+            values = vData(i).toDouble
+          } catch {
+            case _: Exception => logger.warn(s"can't parse ${vData(i)}, use 0.0")
+          }
           val starts = startData(i)
           val ends = endData(i)
           val durations = durationData(i)
