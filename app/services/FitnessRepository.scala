@@ -115,7 +115,7 @@ object Data {
         val endData = (in \ simpleField(clazz) \ END).validate[String].get.split("\n")
         val durationData = (in \ simpleField(clazz) \ DURATION).validate[String].get.split("\n")
         vData.indices.map { i =>
-          var values = 0.0
+          var values = 0.01
           try {
             values = vData(i).toDouble
           } catch {
