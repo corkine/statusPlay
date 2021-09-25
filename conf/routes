@@ -14,6 +14,8 @@ GET     /fitness                        controllers.Default.redirect(to="/fitnes
 GET     /fitness/                       controllers.Default.redirect(to="/fitness/data")
 GET     /fitness/data                   controllers.FitnessController.all(category:Option[String],lastDays:Option[Int],durationBiggerSeconds:Option[Long],skip:Option[Long],limit:Option[Long])
 GET     /fitness/schema                 controllers.FitnessController.schema
+GET     /fitness/:recordId/delete       controllers.FitnessController.deleteRecord(recordId:Long)
+GET     /fitness/:recordId/details       controllers.FitnessController.detailsRecord(recordId:Long)
 
 GET     /goods/schema                   controllers.GoodsController.schema
 GET     /goods                          controllers.Default.redirect(to="/goods/data")

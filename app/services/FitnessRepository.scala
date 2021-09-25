@@ -3,7 +3,6 @@ package services
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, LocalDateTime}
 import java.util.Locale
-
 import com.google.inject.{Inject, Singleton}
 import org.slf4j.LoggerFactory
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -175,10 +174,21 @@ trait FitnessComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
 }
 
 @Singleton
-class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfigProvider,
-                                   val ec: ExecutionContext)
+class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
+                                  (implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with FitnessComponent {
   import profile.api._
+
+  def delete(id:Long): Future[String] = db.run {
+    datas.filter(_.id === id).delete
+  } map {
+    case 0 => "delete failed."
+    case i => s"delete row $i done."
+  }
+
+  def details(id:Long): Future[Option[Data]] = db.run {
+    datas.filter(_.id === id).result.headOption
+  }
 
   def all(category:Option[String],lastDays:Option[Int],
           durationBiggerSeconds:Option[Long],

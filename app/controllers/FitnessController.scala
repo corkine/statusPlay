@@ -26,6 +26,23 @@ class FitnessController @Inject()(cc: ControllerComponents, fr: FitnessRepositor
     }
   }
 
+  def detailsRecord(recordId:Long): Action[AnyContent] = Action.async { implicit req =>
+    authAdmin(req) flatMap {
+      case Right(value) => Future(value)
+      case Left(_) => fr.details(recordId) map {
+        case None => message(s"can't find record for $recordId")
+        case Some(value) => Ok(Json.toJson(value))
+      }
+    }
+  }
+
+  def deleteRecord(recordId:Long): Action[AnyContent] = Action.async { implicit req =>
+    authAdmin(req) flatMap {
+      case Right(value) => Future(value)
+      case Left(_) => fr.delete(recordId) map message
+    }
+  }
+
   def insert: Action[AnyContent] = Action.async { implicit req =>
     req.body.asFormUrlEncoded.flatMap { data =>
       (for {

@@ -1,6 +1,6 @@
 name := "statusPlay"
  
-version := "2.10.12"
+version := "2.10.13"
       
 lazy val `statusplay` = (project in file(".")).enablePlugins(PlayScala)
 
