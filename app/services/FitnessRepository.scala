@@ -26,6 +26,7 @@ object WalkingHeartRateAverage extends Category //步行平均心跳
 object HeartRateVariability extends Category //心率变异性
 object Weight extends Category //体重
 object Breath extends Category //正念呼吸
+object Sex extends Category //性行为
 object Category {
   implicit val categoryFormatter: Format[Category] = new Format[Category] {
     override def reads(json: JsValue): JsResult[Category] = str2Cats(json.as[String]) match {
@@ -55,6 +56,7 @@ object Category {
     case "HEARTRATEVARIABILITY" => HeartRateVariability
     case "WEIGHT" => Weight
     case "BREATH" => Breath
+    case "SEX" => Sex
     case _ => null
   }
 }
@@ -73,6 +75,7 @@ object Data {
   private val logger = LoggerFactory.getLogger(getClass)
   /**
    * 根据 Controller 获得的 iOS 捷径上传的 JSON 解析为 Seq[Data]
+   * 扩充须知：添加一个新的种类 Object，定义其和字符串互相转换的关系，在此处检查解析逻辑，添加对 dataFor(Category) JSON 的解析
    */
   def parseFieldJSON(in:JsValue,skipZeroValueData:Boolean = true):Seq[Data] = {
     Locale.setDefault(Locale.SIMPLIFIED_CHINESE)
@@ -89,6 +92,7 @@ object Data {
       case HeartRateVariability => "heartvariability"
       case Weight => "weight"
       case Breath => "breath"
+      case Sex => "sex"
     }
     val VALUE = "value"
     val UNIT = "unit"
@@ -108,15 +112,17 @@ object Data {
     }
     def dataFor(clazz:Category):Seq[Data] = {
       logger.info(s"Get data from ${Category.cats2String(clazz)}")
+      //iOS 上传数据格式为 start time1\ntime2\ntime3, data 10\n20\n30 诸如此类，要进行分割
       try {
         val vData = (in \ simpleField(clazz) \ VALUE).validate[String].get.split("\n")
         val unit = (in \ simpleField(clazz) \ UNIT).validate[String].get.split("\n").head
         val startData = (in \ simpleField(clazz) \ START).validate[String].get.split("\n")
         val endData = (in \ simpleField(clazz) \ END).validate[String].get.split("\n")
         val durationData = (in \ simpleField(clazz) \ DURATION).validate[String].get.split("\n")
+        //假设每个数据都有 startData，不一定都有 value 和 duration
         startData.indices.map { i =>
           var values = 0.01
-          try {
+          try { //如果 value 解析失败，则使用 0.01，对于呼吸、性行为此类动作 value 为空或者不可用
             values = vData(i).toDouble
           } catch {
             case _: Exception => logger.warn(s"can't parse value, use 0.0")
@@ -136,7 +142,7 @@ object Data {
       dataFor(Steps) ++ dataFor(VO2Max) ++ dataFor(WalkingRunningDistance) ++
         dataFor(FlightsClimbed) ++ dataFor(ActiveCalories) ++ dataFor(RestingCalories) ++
         dataFor(HeartRate) ++ dataFor(RestingHeartRate) ++ dataFor(WalkingHeartRateAverage) ++
-        dataFor(HeartRateVariability) ++ dataFor(Breath) //++ dataFor(Weight)
+        dataFor(HeartRateVariability) ++ dataFor(Breath) ++ dataFor(Sex) //++ dataFor(Weight)
     val res = if (skipZeroValueData) data.filter(_.value != 0) else data
     logger.info(s"Prepare ${res.length} data done."); res
   }
