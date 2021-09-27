@@ -26,6 +26,10 @@ object HeartRateVariability extends Category //心率变异性
 object Weight extends Category //体重
 object Breath extends Category //正念呼吸
 object Sex extends Category //性行为
+object Carbohydrates extends Category //碳水化合物
+object DietaryEnergy extends Category //膳食营养
+object Protein extends Category //蛋白质
+object TotalFat extends Category //脂肪
 object Category {
   implicit val categoryFormatter: Format[Category] = new Format[Category] {
     override def reads(json: JsValue): JsResult[Category] = str2Cats(json.as[String]) match {
@@ -56,6 +60,10 @@ object Category {
     case "WEIGHT" => Weight
     case "BREATH" => Breath
     case "SEX" => Sex
+    case "CARBOHYDRATES" => Carbohydrates
+    case "DIETARYENERGY" => DietaryEnergy
+    case "PROTEIN" => Protein
+    case "TOTALFAT" => TotalFat
     case _ => null
   }
 }
@@ -92,6 +100,10 @@ object Data {
       case Weight => "weight"
       case Breath => "breath"
       case Sex => "sex"
+      case Carbohydrates => "carbohydrates"
+      case DietaryEnergy => "dietaryenergy"
+      case Protein => "protein"
+      case TotalFat => "totalfat"
     }
     val VALUE = "value"
     val UNIT = "unit"
@@ -141,7 +153,8 @@ object Data {
       dataFor(Steps) ++ dataFor(VO2Max) ++ dataFor(WalkingRunningDistance) ++
         dataFor(FlightsClimbed) ++ dataFor(ActiveCalories) ++ dataFor(RestingCalories) ++
         dataFor(HeartRate) ++ dataFor(RestingHeartRate) ++ dataFor(WalkingHeartRateAverage) ++
-        dataFor(HeartRateVariability) ++ dataFor(Breath) ++ dataFor(Sex) //++ dataFor(Weight)
+        dataFor(HeartRateVariability) ++ dataFor(Breath) ++ dataFor(Sex) ++ dataFor(Carbohydrates) ++
+        dataFor(DietaryEnergy) ++ dataFor(Protein) ++ dataFor(TotalFat)//++ dataFor(Weight)
     val res = if (skipZeroValueData) data.filter(_.value != 0) else data
     logger.info(s"Prepare ${res.length} data done."); res
   }
