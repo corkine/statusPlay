@@ -71,6 +71,7 @@ object Category {
 case class Data(category:Category,value:Double,unit:String,
                 start:LocalDateTime,end:LocalDateTime,duration:Duration,id:Long=0L)
 object Data {
+
   implicit val dataFormatter: Format[Data] =
     ((JsPath \ "category").format[Category] and
       (JsPath \ "value").format[Double] and
@@ -79,6 +80,7 @@ object Data {
       (JsPath \ "end").format[LocalDateTime] and
       (JsPath \ "duration").format[Duration] and
       (JsPath \ "id").format[Long])(Data.apply, unlift(Data.unapply))
+
   private val logger = LoggerFactory.getLogger(getClass)
   /**
    * 根据 Controller 获得的 iOS 捷径上传的 JSON 解析为 Seq[Data]
@@ -86,6 +88,7 @@ object Data {
    */
   def parseFieldJSON(in:JsValue,skipZeroValueData:Boolean = true):Seq[Data] = {
     Locale.setDefault(Locale.SIMPLIFIED_CHINESE)
+
     @inline def simpleField(in:Category): String =  in match {
       case Steps => "step"
       case VO2Max => "vo2"
@@ -105,12 +108,14 @@ object Data {
       case Protein => "protein"
       case TotalFat => "totalfat"
     }
+
     val VALUE = "value"
     val UNIT = "unit"
     val START = "start"
     val END = "end"
     val DURATION = "duration"
     val formatter = DateTimeFormatter.ofPattern("yyyy年M月d日 ah:mm")
+
     def parseDuration(in:String): Duration = {
       if (in.trim == "0" || in.isEmpty) return Duration.ZERO
       val s = in.split(":")
@@ -121,6 +126,22 @@ object Data {
       else //23
         Duration.ofSeconds(s(0).toLong)
     }
+
+    /**
+     * 后置类别值解析器，适用于非数值型类别的 value 字段解析，容忍失败，如果不需要解析则返回 false, -1。
+     * @param clazz 类别
+     * @param valueStr 传入的 value 字符串，可能为中文、空或者数值
+     * @return 是否需要更新 value 字段，更新后的 value 字段数值
+     */
+    def parseValueAgainIf(clazz:Category, valueStr:String): (Boolean,Double) = clazz match {
+      case Sex =>
+        if (valueStr.contains("未指定")) (true, 1)
+        else if (valueStr.contains("未用保护措施")) (true, 2)
+        else if (valueStr.contains("使用保护措施")) (true, 3)
+        else (false, -1)
+      case _ => (false, -1)
+    }
+
     def dataFor(clazz:Category):Seq[Data] = {
       logger.info(s"Get data from ${Category.cats2String(clazz)}")
       //iOS 上传数据格式为 start time1\ntime2\ntime3, data 10\n20\n30 诸如此类，要进行分割
@@ -132,11 +153,18 @@ object Data {
         val durationData = (in \ simpleField(clazz) \ DURATION).validate[String].get.split("\n")
         //假设每个数据都有 startData，不一定都有 value 和 duration
         startData.indices.map { i =>
+          //vData 可能为空，或者非浮点数（性行为和呼吸）
           var values = 0.01
-          try { //如果 value 解析失败，则使用 0.01，对于呼吸、性行为此类动作 value 为空或者不可用
+          try {
             values = vData(i).toDouble
           } catch {
             case _: Exception => logger.warn(s"can't parse value, use 0.0")
+          }
+          try { //对于特殊类别，提供后续修改值的机会
+            val (needChange, newValue) = parseValueAgainIf(clazz, vData(i))
+            if (needChange) values = newValue
+          } catch {
+            case _: Exception => logger.warn(s"Post parse value for cat: $clazz failed.")
           }
           val starts = startData(i)
           val ends = endData(i)
@@ -149,13 +177,16 @@ object Data {
           s" because ${e.getMessage}, skip now..."); Seq()
       }
     }
+
     val data =
       dataFor(Steps) ++ dataFor(VO2Max) ++ dataFor(WalkingRunningDistance) ++
         dataFor(FlightsClimbed) ++ dataFor(ActiveCalories) ++ dataFor(RestingCalories) ++
         dataFor(HeartRate) ++ dataFor(RestingHeartRate) ++ dataFor(WalkingHeartRateAverage) ++
         dataFor(HeartRateVariability) ++ dataFor(Breath) ++ dataFor(Sex) ++ dataFor(Carbohydrates) ++
         dataFor(DietaryEnergy) ++ dataFor(Protein) ++ dataFor(TotalFat)//++ dataFor(Weight)
+
     val res = if (skipZeroValueData) data.filter(_.value != 0) else data
+
     logger.info(s"Prepare ${res.length} data done."); res
   }
 }
