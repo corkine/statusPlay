@@ -234,15 +234,15 @@ class FitnessRepository @Inject() (protected val dbConfigProvider: DatabaseConfi
     datas.filter(_.id === id).result.headOption
   }
 
-  def all(category:Option[String],lastDays:Option[Int],
+  def all(categories:Option[String],lastDays:Option[Int],
           durationBiggerSeconds:Option[Long],
           skipRow:Option[Long],limitRow:Option[Long]): Future[Seq[Data]] = {
     @inline def handledCategory(datas:TableQuery[Datas]): Option[Query[Datas, Data, Seq]] = {
-      if (category.isEmpty) return Some(datas) //fetch all data
-      Category.str2Cats(category.get) match {
-        case null => None //some spell error
-        case o => Some(datas.filter(_.category === o)) //filter some data
-      }
+      if (categories.isEmpty) return Some(datas) //fetch all data
+      val catList = categories.get.split("::").map(Category.str2Cats).filter(_ != null).toList
+      if (catList.isEmpty) None //spell error
+      else if (catList.size == 1) Some(datas.filter(_.category === catList.head)) //one category
+      else Some(datas.filter(_.category.inSet(catList))) //some categories
     }
     @inline def handleDurationAndDays(datas:Query[Datas,Data,Seq]): Query[Datas, Data, Seq] = {
       val datasInternal = lastDays match {
